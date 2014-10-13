@@ -12,7 +12,8 @@ public class Node implements INodeCli, Runnable {
 	private Config config;
 	private InputStream userRequestStream;
 	private PrintStream userResponseStream;
-
+	private String allowedOperators;
+	
 	/**
 	 * @param componentName
 	 *            the name of the component - represented in the prompt
@@ -29,13 +30,17 @@ public class Node implements INodeCli, Runnable {
 		this.config = config;
 		this.userRequestStream = userRequestStream;
 		this.userResponseStream = userResponseStream;
-
-		// TODO
+		
+		
+		// TODO: initialize isAlive message timer
 	}
 
 	@Override
 	public void run() {
-		// TODO
+		
+		// TODO: start isAlive message timer
+		new Thread(new RequestListener(config)).start();
+		// TODO: I/O mit Shell
 	}
 
 	@Override
@@ -58,7 +63,8 @@ public class Node implements INodeCli, Runnable {
 	public static void main(String[] args) {
 		Node node = new Node(args[0], new Config(args[0]), System.in,
 				System.out);
-		// TODO: start the node
+		new Thread(node).start();
+		
 	}
 
 	// --- Commands needed for Lab 2. Please note that you do not have to
