@@ -1,6 +1,6 @@
 package util;
 
-public enum ComputationStatus {
+public enum ResultStatus {
 OK,
 DivisionByZero,
 OperatorNotSupported
