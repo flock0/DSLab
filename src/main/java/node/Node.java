@@ -5,6 +5,9 @@ import util.Config;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.net.DatagramSocket;
+import java.net.Inet4Address;
+import java.util.Timer;
 
 public class Node implements INodeCli, Runnable {
 
@@ -12,7 +15,7 @@ public class Node implements INodeCli, Runnable {
 	private Config config;
 	private InputStream userRequestStream;
 	private PrintStream userResponseStream;
-	private String allowedOperators;
+	private Timer aliveMessageTimer;
 	
 	/**
 	 * @param componentName
@@ -31,16 +34,20 @@ public class Node implements INodeCli, Runnable {
 		this.userRequestStream = userRequestStream;
 		this.userResponseStream = userResponseStream;
 		
-		
-		// TODO: initialize isAlive message timer
+		aliveMessageTimer = new Timer();
 	}
 
 	@Override
 	public void run() {
-		
-		// TODO: start isAlive message timer
+		startAliveMessageTimer();
+		// TODO: Create and save server socket
 		new Thread(new RequestListener(config)).start();
 		// TODO: I/O mit Shell
+		// TODO: Shutdown
+	}
+
+	private void startAliveMessageTimer() {
+		aliveMessageTimer.schedule(new AliveMessageTask(config), 0, config.getInt("node.alive"));
 	}
 
 	@Override
