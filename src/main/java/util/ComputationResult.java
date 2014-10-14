@@ -1,25 +1,22 @@
 package util;
 
 public class ComputationResult {
-	private ComputationStatus status;
+	private ResultStatus status;
 	private int number;
 
-	public ComputationStatus getStatus() {
+	public ResultStatus getStatus() {
 		return status;
-	}
-
-	public void setStatus(ComputationStatus status) {
-		this.status = status;
 	}
 
 	public int getNumber() {
 		return number;
 	}
 
-	public void setNumber(int number) {
+	public ComputationResult(ResultStatus status, int number) {
+		this.status = status;
 		this.number = number;
 	}
-
+	
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
@@ -30,12 +27,10 @@ public class ComputationResult {
 	}
 
 	public static ComputationResult fromString(String in) {
-		ComputationResult result = new ComputationResult();
-		
 		String[] split = in.split(" ");
-		result.status = ComputationStatus.valueOf(split[0]);
-		result.number = Integer.parseInt(split[1]);
+		ResultStatus status = ResultStatus.valueOf(split[0]);
+		int number = Integer.parseInt(split[1]);
 		
-		return result;
+		return new ComputationResult(status, number);
 	}
 }
