@@ -19,7 +19,7 @@ public class Node implements INodeCli, Runnable {
 	private InputStream userRequestStream;
 	private PrintStream userResponseStream;
 	private Shell shell;
-	private Timer aliveMessageTimer;
+	private Timer aliveTimer;
 	private ComputationRequestListener listener;
 	
 	/**
@@ -39,7 +39,7 @@ public class Node implements INodeCli, Runnable {
 		this.userRequestStream = userRequestStream;
 		this.userResponseStream = userResponseStream;
 		
-		aliveMessageTimer = new Timer();
+		aliveTimer = new Timer();
 		listener = new ComputationRequestListener(config);
 		initializeShell();
 		
@@ -52,13 +52,13 @@ public class Node implements INodeCli, Runnable {
 
 	@Override
 	public void run() {
-		startAliveMessageTimer();
+		startAliveTimer();
 		startRequestListener();
 		startShell();
 	}
 
-	private void startAliveMessageTimer() {
-		aliveMessageTimer.schedule(new AliveMessageTask(config), 0, config.getInt("node.alive"));
+	private void startAliveTimer() {
+		aliveTimer.schedule(new AliveTask(config), 0, config.getInt("node.alive"));
 	}
 
 	private void startRequestListener() {
@@ -74,7 +74,7 @@ public class Node implements INodeCli, Runnable {
 	@Command
 	public String exit() throws IOException {
 		listener.shutdown();
-		aliveMessageTimer.cancel();
+		aliveTimer.cancel();
 		shell.close();
 		return "Shut down completed! Bye ..";
 	}

@@ -10,14 +10,14 @@ import java.util.TimerTask;
 
 import util.Config;
 
-public class AliveMessageTask extends TimerTask {
+public class AliveTask extends TimerTask {
 
 	private Config config;
 	private String aliveMessage;
 	private DatagramPacket alivePacket;
 	private DatagramSocket socket;
 
-	public AliveMessageTask(Config config) {
+	public AliveTask(Config config) {
 		this.config = config;
 		try {
 
