@@ -27,6 +27,7 @@ public class SingleRequestHandler implements Runnable {
 			
 			ComputationResult result = unit.compute(request);
 			channel.sendResult(result);
+			// TODO: Logging
 			
 		} catch (IOException e) {
 			System.out.println("Error on getting request: " + e.getMessage());
