@@ -10,6 +10,10 @@ import java.util.TimerTask;
 
 import util.Config;
 
+/**
+ * Handles the task of sending a periodical alive message
+ *
+ */
 public class AliveTask extends TimerTask {
 
 	private Config config;

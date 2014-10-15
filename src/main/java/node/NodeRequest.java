@@ -10,9 +10,7 @@ public class NodeRequest {
 	
 	/**
 	 * Creates a new NodeRequest
-	 * @param one The first operand. Must be parsable as an Integer
-	 * @param operator
-	 * @param two The second operand. Must be parsable as an Integer
+	 * @param split An array containing the request for computation. The first field must include the operand1. The second field the operator and the third field the operand2. Operand1 and 2 must be parsable as an integer.
 	 */
 	public NodeRequest(String[] split) {
 		operand1 = Integer.parseInt(split[0]);

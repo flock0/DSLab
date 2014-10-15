@@ -3,16 +3,9 @@ package node;
 import util.ResultStatus;
 
 public class ComputationResult {
+	
 	private ResultStatus status;
 	private int number;
-
-	public ResultStatus getStatus() {
-		return status;
-	}
-
-	public int getNumber() {
-		return number;
-	}
 
 	public ComputationResult(ResultStatus status, int number) {
 		this.status = status;
@@ -34,5 +27,13 @@ public class ComputationResult {
 		int number = Integer.parseInt(split[1]);
 		
 		return new ComputationResult(status, number);
+	}
+
+	public ResultStatus getStatus() {
+		return status;
+	}
+
+	public int getNumber() {
+		return number;
 	}
 }

@@ -12,6 +12,10 @@ import java.util.Timer;
 import cli.Command;
 import cli.Shell;
 
+/**
+ * Initializes and starts a computation node
+ *
+ */
 public class Node implements INodeCli, Runnable {
 
 	private String componentName;
