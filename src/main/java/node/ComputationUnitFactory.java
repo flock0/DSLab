@@ -6,7 +6,7 @@ public class ComputationUnitFactory {
 	
 	/**
 	 * Creates an appropriate ComputationUnit depending on the request.
-	 * @param request An array that contains the first operand, the operator and the second operand in the first three fields
+	 * @param request The request that should be computed
 	 * @param allowedOperators A string with the allowed arithmetic operators
 	 * @return An appropriate ComputationUnit
 	 */

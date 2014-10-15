@@ -1,6 +1,5 @@
 package node;
 
-import util.ComputationResult;
 import util.ResultStatus;
 
 public class DivideComputationUnit implements ComputationUnit {

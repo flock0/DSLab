@@ -1,8 +1,9 @@
-package util;
+package node;
 
 import java.io.IOException;
 
-import node.NodeRequest;
+import util.Channel;
+import util.ChannelDecorator;
 
 public class ComputationChannel extends ChannelDecorator {
 

@@ -1,6 +1,5 @@
 package node;
 
-import util.ComputationResult;
 
 public interface ComputationUnit {
 	/**

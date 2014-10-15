@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.net.Socket;
 
 import util.Channel;
-import util.ComputationChannel;
-import util.ComputationResult;
 import util.Config;
 
 public class SingleRequestHandler implements Runnable {

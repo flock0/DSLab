@@ -1,4 +1,6 @@
-package util;
+package node;
+
+import util.ResultStatus;
 
 public class ComputationResult {
 	private ResultStatus status;

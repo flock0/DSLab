@@ -9,6 +9,7 @@ import java.net.DatagramSocket;
 import java.net.Inet4Address;
 import java.util.Timer;
 
+import cli.Command;
 import cli.Shell;
 
 public class Node implements INodeCli, Runnable {
@@ -70,6 +71,7 @@ public class Node implements INodeCli, Runnable {
 	}
 
 	@Override
+	@Command
 	public String exit() throws IOException {
 		listener.shutdown();
 		aliveMessageTimer.cancel();

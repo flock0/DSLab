@@ -11,7 +11,6 @@ import java.util.concurrent.TimeUnit;
 import javax.print.CancelablePrintJob;
 
 import util.Channel;
-import util.ComputationChannel;
 import util.Config;
 import util.TcpChannel;
 
