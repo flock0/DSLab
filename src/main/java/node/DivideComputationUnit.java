@@ -6,9 +6,9 @@ import util.ResultStatus;
 public class DivideComputationUnit implements ComputationUnit {
 
 	@Override
-	public ComputationResult compute(String[] request) {
-		int dividend = Integer.parseInt(request[0]);
-		int divisor = Integer.parseInt(request[2]);
+	public ComputationResult compute(NodeRequest request) {
+		int dividend = request.getOperand1();
+		int divisor = request.getOperand2();
 		
 		if(divisor == 0)
 			return new ComputationResult(ResultStatus.DivisionByZero, 0);

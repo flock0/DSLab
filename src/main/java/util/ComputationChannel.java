@@ -2,6 +2,8 @@ package util;
 
 import java.io.IOException;
 
+import node.NodeRequest;
+
 public class ComputationChannel extends ChannelDecorator {
 
 	public ComputationChannel(Channel underlying) {
@@ -9,12 +11,11 @@ public class ComputationChannel extends ChannelDecorator {
 	}
 	
 	/**
-	 * Send a computation request to the node
-	 * @param request An array that contains the first operand, the operator and the second operand in the first three fields
-	 * @return 
+	 * Send a computation request to the node 
 	 */
-	public void requestComputation(String[] request) {
-		println(String.format("!compute %s %s %s", request[0], request[1], request[2]));
+	public void requestComputation(NodeRequest request) {
+		println(String.format("!compute %s %s %s", 
+				request.getOperand1(), request.getOperator(), request.getOperand2()));
 	}
 	
 
@@ -24,12 +25,11 @@ public class ComputationChannel extends ChannelDecorator {
 	
 	/**
 	 * Gets the next computation request
-	 * @return An array that contains the first operand, the operator and the second operand in the first three fields
 	 */
-	public String[] getRequest() throws IOException {
-		String request = readLine();
-		if(request.startsWith("!compute "))
-			return request.substring(9).split(" ");
+	public NodeRequest getRequest() throws IOException {
+		String message = readLine();
+		if(message.startsWith("!compute "))
+			return new NodeRequest(message.substring(9).split(" "));
 		return null;
 	}
 	

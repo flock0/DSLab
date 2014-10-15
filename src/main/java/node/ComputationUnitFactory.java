@@ -10,16 +10,16 @@ public class ComputationUnitFactory {
 	 * @param allowedOperators A string with the allowed arithmetic operators
 	 * @return An appropriate ComputationUnit
 	 */
-	public static ComputationUnit createUnit(String[] request, String allowedOperators) {
-		if(allowedOperators.contains(request[1]))
-			return getNewComputationUnit(request[1]);
+	public static ComputationUnit createUnit(NodeRequest request, String allowedOperators) {
+		if(allowedOperators.contains(request.getOperator()))
+			return getNewComputationUnit(request.getOperator());
 		else
 			return new UnsupportedComputationUnit();
 				
 	}
 
-	private static ComputationUnit getNewComputationUnit(String string) {
-		switch(string) {
+	private static ComputationUnit getNewComputationUnit(String operator) {
+		switch(operator) {
 		case "+":
 			return new AddComputationUnit();
 		case "-":
