@@ -9,6 +9,8 @@ import java.util.Timer;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
+import cli.Shell;
+
 public class CloudController implements ICloudControllerCli, Runnable {
 
 	private String componentName;
@@ -16,9 +18,12 @@ public class CloudController implements ICloudControllerCli, Runnable {
 	private InputStream userRequestStream;
 	private PrintStream userResponseStream;
 	private Timer nodePurgeTimer;
+	private Shell shell;
 	private ConcurrentHashMap<Character, ConcurrentSkipListSet<Node>> activeNodes;
 	private ConcurrentHashMap<String, Node> allNodes;
+	private ConcurrentHashMap<String, User> users;
 	private AliveListener aliveListener;
+	
 
 	/**
 	 * @param componentName
@@ -52,7 +57,23 @@ public class CloudController implements ICloudControllerCli, Runnable {
 	}
 
 	private void loadUsers() {
-		// TODO Auto-generated method stub
+		users = new ConcurrentHashMap<>();
+		Config userConfig = new Config("user");
+		
+		for(String key : userConfig.listKeys()) {
+			
+			String username = key.split("\\.")[0];
+			if(!users.containsKey(username)) {
+				User user = new User(username, userConfig);
+				users.put(username, user);
+			}
+		}
+		
+	}
+
+	private void initializeShell() {
+		shell = new Shell(componentName, userRequestStream, userResponseStream);
+		shell.register(this);
 		
 	}
 
@@ -74,7 +95,13 @@ public class CloudController implements ICloudControllerCli, Runnable {
 		aliveListener.start();
 	}
 
+	private void startShell() {
+		new Thread(shell).start();
+		System.out.println(componentName + " up and waiting for commands!");
+	}
+
 	@Override
+	@Command
 	public String nodes() throws IOException {
 		// TODO Auto-generated method stub
 		return null;
@@ -100,7 +127,7 @@ public class CloudController implements ICloudControllerCli, Runnable {
 	public static void main(String[] args) {
 		CloudController cloudController = new CloudController(args[0],
 				new Config("controller"), System.in, System.out);
-		// TODO: start the cloud controller
+		new Thread(cloudController).start();
 	}
 
 }
