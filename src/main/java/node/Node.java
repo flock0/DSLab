@@ -40,14 +40,17 @@ public class Node implements INodeCli, Runnable {
 	@Override
 	public void run() {
 		startAliveMessageTimer();
-		// TODO: Create and save server socket
-		new Thread(new RequestListener(config)).start();
+		initializeRequestListener();
 		// TODO: I/O mit Shell
 		// TODO: Shutdown
 	}
 
 	private void startAliveMessageTimer() {
 		aliveMessageTimer.schedule(new AliveMessageTask(config), 0, config.getInt("node.alive"));
+	}
+
+	private void initializeRequestListener() {
+		new ComputationRequestListener(config).start();
 	}
 
 	@Override
