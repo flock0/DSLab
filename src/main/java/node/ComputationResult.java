@@ -29,7 +29,7 @@ public class ComputationResult {
 	}
 
 	public static ComputationResult fromString(String in) {
-		String[] split = in.split(" ");
+		String[] split = in.split("\\s");
 		ResultStatus status = ResultStatus.valueOf(split[0]);
 		int number = Integer.parseInt(split[1]);
 		

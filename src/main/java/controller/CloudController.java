@@ -5,6 +5,9 @@ import util.Config;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.Timer;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 public class CloudController implements ICloudControllerCli, Runnable {
 
@@ -12,6 +15,10 @@ public class CloudController implements ICloudControllerCli, Runnable {
 	private Config config;
 	private InputStream userRequestStream;
 	private PrintStream userResponseStream;
+	private Timer nodePurgeTimer;
+	private ConcurrentHashMap<Character, ConcurrentSkipListSet<Node>> activeNodes;
+	private ConcurrentHashMap<String, Node> allNodes;
+	private AliveListener aliveListener;
 
 	/**
 	 * @param componentName
@@ -30,12 +37,31 @@ public class CloudController implements ICloudControllerCli, Runnable {
 		this.userRequestStream = userRequestStream;
 		this.userResponseStream = userResponseStream;
 
-		// TODO
+		nodePurgeTimer = new Timer();
+		activeNodes = new ConcurrentHashMap<Character, ConcurrentSkipListSet<Node>>();
+		allNodes = new ConcurrentHashMap<String, Node>();
+		aliveListener = new AliveListener(activeNodes, allNodes, config);
+		loadUsers();
+		initializeShell();
 	}
 
 	@Override
 	public void run() {
-		// TODO
+		
+		startNodePurgeTimer();
+		startAliveListener();
+		startRequestListener();
+		startShell();
+		
+	}
+
+	private void startNodePurgeTimer() {
+		nodePurgeTimer.schedule(new NodePurgeTask(activeNodes, config), 0, config.getInt("node.checkPeriod"));
+	}
+
+	private void startAliveListener() {
+		
+		
 	}
 
 	@Override
