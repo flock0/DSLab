@@ -9,13 +9,17 @@ import java.net.DatagramSocket;
 import java.net.Inet4Address;
 import java.util.Timer;
 
+import cli.Shell;
+
 public class Node implements INodeCli, Runnable {
 
 	private String componentName;
 	private Config config;
 	private InputStream userRequestStream;
 	private PrintStream userResponseStream;
+	private Shell shell;
 	private Timer aliveMessageTimer;
+	private ComputationRequestListener listener;
 	
 	/**
 	 * @param componentName
@@ -35,28 +39,42 @@ public class Node implements INodeCli, Runnable {
 		this.userResponseStream = userResponseStream;
 		
 		aliveMessageTimer = new Timer();
+		listener = new ComputationRequestListener(config);
+		initializeShell();
+		
+	}
+
+	private void initializeShell() {
+		shell = new Shell(componentName, userRequestStream, userResponseStream);
+		shell.register(this);
 	}
 
 	@Override
 	public void run() {
 		startAliveMessageTimer();
-		initializeRequestListener();
-		// TODO: I/O mit Shell
-		// TODO: Shutdown
+		startRequestListener();
+		startShell();
 	}
 
 	private void startAliveMessageTimer() {
 		aliveMessageTimer.schedule(new AliveMessageTask(config), 0, config.getInt("node.alive"));
 	}
 
-	private void initializeRequestListener() {
-		new ComputationRequestListener(config).start();
+	private void startRequestListener() {
+		listener.start();
+	}
+
+	private void startShell() {
+		new Thread(shell).start();
+		System.out.println(componentName + " up and waiting for commands!");
 	}
 
 	@Override
 	public String exit() throws IOException {
-		// TODO Auto-generated method stub
-		return null;
+		listener.shutdown();
+		aliveMessageTimer.cancel();
+		shell.close();
+		return "Shut down completed! Bye ..";
 	}
 
 	@Override
