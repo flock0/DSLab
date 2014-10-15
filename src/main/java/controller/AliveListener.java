@@ -17,7 +17,7 @@ public class AliveListener extends Thread {
 	private ConcurrentHashMap<String, Node> allNodes;
 	private DatagramSocket datagramSocket = null;
 	private DatagramPacket packet = null;
-	private long lastReceivedPacket;
+	private long lastAliveTimestamp;
 	private String[] splitMessage = null;
 	private long timeoutPeriod;
 
@@ -67,7 +67,7 @@ public class AliveListener extends Thread {
 		DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 
 		datagramSocket.receive(packet);
-		lastReceivedPacket = System.currentTimeMillis();
+		lastAliveTimestamp = System.currentTimeMillis();
 
 		return packet;
 	}
@@ -78,7 +78,7 @@ public class AliveListener extends Thread {
 	}
 
 	private void updateActiveNodes() {
-		String uniqueNodeID = Node.createUniqueID(packet.getAddress(),
+		String uniqueNodeID = Node.createNetworkID(packet.getAddress(),
 				Integer.parseInt(splitMessage[1]));
 
 		if (haveSeenNode(uniqueNodeID)) {
@@ -95,13 +95,13 @@ public class AliveListener extends Thread {
 	private void refreshNode(String uniqueNodeID) {
 		Node node = allNodes.get(uniqueNodeID);
 		
-		if(!node.wasActiveIn(timeoutPeriod)) {
+		if(!node.isOnline()) {
 			
-			node.setLastAliveMessage(lastReceivedPacket);
+			node.setLastAliveMessage(lastAliveTimestamp);
 			addToActiveNodes(node);
 			
 		} else {
-			node.setLastAliveMessage(lastReceivedPacket);
+			node.setLastAliveMessage(lastAliveTimestamp);
 			
 			if(operatorsChanged(node.getAllowedOperators(), splitMessage[2])) {
 				synchronized(node) {
@@ -133,9 +133,9 @@ public class AliveListener extends Thread {
 		Node node = new Node(packet.getAddress(),
 				Integer.parseInt(splitMessage[1]));
 		node.setAllowedOperators(splitMessage[2]);
-		node.setLastAliveMessage(lastReceivedPacket);
+		node.setLastAliveMessage(lastAliveTimestamp);
 		
-		allNodes.put(node.getUniqueID(), node);
+		allNodes.put(node.getNetworkID(), node);
 		addToActiveNodes(node);
 	}
 

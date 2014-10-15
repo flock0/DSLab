@@ -26,7 +26,7 @@ public class NodePurgeTask extends TimerTask {
 	private void purgeInactiveNodes() {
 		for(ConcurrentSkipListSet<Node> singleOperatorList : activeNodes.values())
 			for(Node node : singleOperatorList)
-				if(!node.wasActiveIn(timeoutPeriod))
+				if(!node.isOnline())
 					synchronized(node) {
 						removeFromActiveNodes(node);
 					}		

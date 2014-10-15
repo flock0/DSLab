@@ -37,12 +37,23 @@ public class CloudController implements ICloudControllerCli, Runnable {
 		this.userRequestStream = userRequestStream;
 		this.userResponseStream = userResponseStream;
 
+		
 		nodePurgeTimer = new Timer();
-		activeNodes = new ConcurrentHashMap<Character, ConcurrentSkipListSet<Node>>();
-		allNodes = new ConcurrentHashMap<String, Node>();
+		Node.TimeoutPeriod = config.getInt("node.timeout");
+		initializeNodeMaps();
 		aliveListener = new AliveListener(activeNodes, allNodes, config);
 		loadUsers();
 		initializeShell();
+	}
+
+	private void initializeNodeMaps() {
+		activeNodes = new ConcurrentHashMap<Character, ConcurrentSkipListSet<Node>>();
+		allNodes = new ConcurrentHashMap<String, Node>();
+	}
+
+	private void loadUsers() {
+		// TODO Auto-generated method stub
+		
 	}
 
 	@Override
@@ -60,8 +71,7 @@ public class CloudController implements ICloudControllerCli, Runnable {
 	}
 
 	private void startAliveListener() {
-		
-		
+		aliveListener.start();
 	}
 
 	@Override
