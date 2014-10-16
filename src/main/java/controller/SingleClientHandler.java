@@ -40,6 +40,8 @@ public class SingleClientHandler implements Runnable {
 	public void run() {
 		try {
 			while (true) {
+				if(Thread.currentThread().isInterrupted())
+					break;
 				ClientRequest request = channel.getRequest();
 
 				switch (request.getType()) {
@@ -47,16 +49,16 @@ public class SingleClientHandler implements Runnable {
 					channel.println(handleLogin(request));
 					break;
 				case Logout:
-					channel.println(handleLogout(request));
+					channel.println(handleLogout());
 					break;
 				case Credits:
-					channel.println(handleCredits(request));
+					channel.println(handleCredits());
 					break;
 				case Buy:
 					channel.println(handleBuy(request));
 					break;
 				case List:
-					channel.println(handleList(request));
+					channel.println(handleList());
 					break;
 				case Compute:
 					channel.println(handleCompute(request));
@@ -71,7 +73,7 @@ public class SingleClientHandler implements Runnable {
 		} catch (IOException e) {
 			System.out.println("Error on getting request: " + e.getMessage());
 		} finally {
-			channel.close();
+			logoutAndClose();
 		}
 
 	}
@@ -83,6 +85,7 @@ public class SingleClientHandler implements Runnable {
 			return "Wrong username or password.";
 
 		currentUser = users.get(request.getUsername());
+		currentUser.setOnline(true);
 		return "Successfully logged in.";
 	}
 
@@ -96,12 +99,13 @@ public class SingleClientHandler implements Runnable {
 						request.getPassword());
 	}
 
-	private String handleLogout(ClientRequest request) {
+	private String handleLogout() {
+		currentUser.setOnline(false);
 		currentUser = null;
 		return "Successfully logged out.";
 	}
 
-	private String handleCredits(ClientRequest request) {
+	private String handleCredits() {
 		if (!isLoggedIn())
 			return "You need to log in first.";
 		else
@@ -121,7 +125,7 @@ public class SingleClientHandler implements Runnable {
 		}
 	}
 
-	private String handleList(ClientRequest request) {
+	private String handleList() {
 		if (!isLoggedIn())
 			return "You need to log in first.";
 		else
@@ -154,6 +158,9 @@ public class SingleClientHandler implements Runnable {
 
 		try {
 			while (remainingOperationsCount != 0) {
+				if(Thread.currentThread().isInterrupted())
+					break;
+				
 				nextOperator = operators[totalOperatorCount - remainingOperationsCount]; 
 				secondOperand = operands[totalOperandCount - remainingOperationsCount];
 				NodeRequest computationRequest = new NodeRequest(firstOperand,
@@ -260,6 +267,14 @@ public class SingleClientHandler implements Runnable {
 	private void deductCredits(int operatorCount) {
 		currentUser.setCredits(currentUser.getCredits() - FixedParameters.CREDIT_COST_PER_OPERATOR * operatorCount);
 
+	}
+
+	private void logoutAndClose() {
+		if(currentUser != null) {
+			currentUser.setOnline(false);
+			currentUser = null;
+		}
+		channel.close();
 	}
 
 }

@@ -22,6 +22,9 @@ public class ComputationResult {
 	}
 
 	public static ComputationResult fromString(String in) {
+		if(in == null)
+			return new ComputationResult(ResultStatus.OperatorNotSupported, 0);
+		
 		String[] split = in.split("\\s");
 		ResultStatus status = ResultStatus.valueOf(split[0]);
 		int number = Integer.parseInt(split[1]);

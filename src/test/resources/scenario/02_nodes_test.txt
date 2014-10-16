@@ -1,0 +1,30 @@
+*	CloudController	controller
+*	Client			bill
+
+
+bill:		!login bill 23456
+>			verify("success")
+
+controller:		!nodes
+>			verify("")
+
+*	Node			node1
+
+controller:		!nodes
+>			verify(".*127.0.0.1.*13362.*online.*", T(test.util.Flag).REGEX)
+
+*	Node			node3
+
+controller:		!nodes
+>			verify(".*127.0.0.1.*13362.*online.*", T(test.util.Flag).REGEX)
+controller:		!nodes
+>			verify(".*127.0.0.1.*13364.*online.*", T(test.util.Flag).REGEX)
+
+node1:		!exit
+
+bill:		!list
+>			verify(".*127.0.0.1.*13362.*offline.*", T(test.util.Flag).REGEX)
+
+controller: !exit
+bill:		!exit
+node3:		!exit

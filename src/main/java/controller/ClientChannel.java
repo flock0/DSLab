@@ -19,6 +19,12 @@ public class ClientChannel extends ChannelDecorator {
 	
 	public ClientRequest getRequest() throws IOException {
 		String message = underlying.readLine();
+		if(message == null) {
+			ClientRequest request = new ClientRequest();
+			request.setType(RequestType.Invalid);
+			return request;
+		}
+		
 		String[] split = message.split("\\s");
 		
 		switch(split[0]) {

@@ -55,7 +55,7 @@ public class AliveListener extends TerminableThread {
 						updateActiveNodes();
 				}
 			} catch (SocketException e) {
-				System.out.println("Socket shutdown: " + e.getMessage());
+				System.out.println("AliveSocket shutdown: " + e.getMessage());
 			} catch (IOException e) {
 				System.out.println("IOException occured: " + e.getMessage());
 			}

@@ -140,9 +140,9 @@ public class CloudController implements ICloudControllerCli, Runnable {
 	@Override
 	@Command
 	public String exit() throws IOException {
+		aliveListener.shutdown();
 		clientListener.shutdown();
 		nodePurgeTimer.cancel();
-		aliveListener.shutdown();
 		shell.close();
 		return "Shut down completed! Bye ..";
 	}

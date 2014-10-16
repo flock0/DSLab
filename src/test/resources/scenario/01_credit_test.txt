@@ -1,0 +1,26 @@
+*	CloudController	controller
+*	Client			bill
+*	Client			bill2
+
+bill:		!login bill 23456
+>			verify("success")
+
+bill:		!credits
+>			verify("500")
+
+bill:		!buy 300
+>			verify(".*800.*", T(test.util.Flag).REGEX)
+
+bill:		!credits
+>			verify("800")
+
+bill:		!exit
+
+bill2:		!login bill 23456
+>			verify("success")
+
+bill2:		!credits
+>			verify("800")
+
+controller: !exit
+bill2:		!exit

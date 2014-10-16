@@ -3,5 +3,6 @@ package util;
 public enum ResultStatus {
 OK,
 DivisionByZero,
-OperatorNotSupported
+OperatorNotSupported, 
+Error
 }

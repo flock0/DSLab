@@ -29,7 +29,7 @@ public class ComputationChannel extends ChannelDecorator {
 	 */
 	public NodeRequest getRequest() throws IOException {
 		String message = readLine();
-		if(message.startsWith("!compute "))
+		if(message != null && message.startsWith("!compute "))
 			return new NodeRequest(message.substring(9).split("\\s"));
 		return null;
 	}
