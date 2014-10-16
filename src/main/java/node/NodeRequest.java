@@ -6,7 +6,7 @@ package node;
 public class NodeRequest {
 	private int operand1;
 	private int operand2;
-	private String operator;
+	private char operator;
 	
 	/**
 	 * Creates a new NodeRequest
@@ -15,9 +15,14 @@ public class NodeRequest {
 	public NodeRequest(String[] split) {
 		operand1 = Integer.parseInt(split[0]);
 		operand2 = Integer.parseInt(split[2]);
-		this.operator = split[1];
+		this.operator = split[1].charAt(0);
 	}
 	
+	public NodeRequest(int operand1, char operator, int operand2) {
+		this.operand1 = operand1;
+		this.operand2 = operand2;
+		this.operator = operator;
+	}
 	public int getOperand1() {
 		return operand1;
 	}
@@ -26,7 +31,7 @@ public class NodeRequest {
 		return operand2;
 	}
 	
-	public String getOperator() {
+	public char getOperator() {
 		return operator;
 	}
 	

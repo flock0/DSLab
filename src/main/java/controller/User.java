@@ -1,8 +1,10 @@
 package controller;
 
 import util.Config;
+import util.FixedParameters;
 
 public class User {
+	
 	private String username;
 	private int credits;
 	private String password;
@@ -29,8 +31,11 @@ public class User {
 	public String getUsername() {
 		return username;
 	}
-	public String getPassword() {
-		return password;
+	public boolean isCorrectPassword(String passwordToCheck) {
+		return password.equals(passwordToCheck);
+	}
+	public boolean hasEnoughCredits(ClientRequest request) {
+		return credits > request.getOperators().length * FixedParameters.CREDIT_COST_PER_OPERATOR;
 	}
 	@Override
 	public String toString() {

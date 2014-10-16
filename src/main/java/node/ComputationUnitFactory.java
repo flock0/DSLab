@@ -11,22 +11,22 @@ public class ComputationUnitFactory {
 	 * @return An appropriate ComputationUnit
 	 */
 	public static ComputationUnit createUnit(NodeRequest request, String allowedOperators) {
-		if(allowedOperators.contains(request.getOperator()))
+		if(allowedOperators.indexOf(request.getOperator()) != -1)
 			return getNewComputationUnit(request.getOperator());
 		else
 			return new UnsupportedComputationUnit();
 				
 	}
 
-	private static ComputationUnit getNewComputationUnit(String operator) {
+	private static ComputationUnit getNewComputationUnit(char operator) {
 		switch(operator) {
-		case "+":
+		case '+':
 			return new AddComputationUnit();
-		case "-":
+		case '-':
 			return new SubtractComputationUnit();
-		case "*":
+		case '*':
 			return new MultiplyComputationUnit();
-		case "/":
+		case '/':
 			return new DivideComputationUnit();
 		default:
 			return new UnsupportedComputationUnit();

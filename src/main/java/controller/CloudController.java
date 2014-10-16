@@ -61,7 +61,7 @@ public class CloudController implements ICloudControllerCli, Runnable {
 
 	private void initializeListeners() {
 		aliveListener = new AliveListener(activeNodes, allNodes, config);
-		clientListener = new ClientListener(config);
+		clientListener = new ClientListener(users, activeNodes, config);
 	}
 	
 	private void loadUsers() {
