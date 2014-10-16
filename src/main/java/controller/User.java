@@ -45,6 +45,7 @@ public class User {
 		builder.append(isOnlineString());
 		builder.append(" Credits: ");
 		builder.append(credits);
+		builder.append('\n');
 		return builder.toString();
 	}
 	

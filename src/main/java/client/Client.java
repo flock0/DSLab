@@ -3,8 +3,14 @@ package client;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.net.Socket;
+import java.net.UnknownHostException;
 
+import cli.Command;
+import cli.Shell;
+import util.Channel;
 import util.Config;
+import util.TcpChannel;
 
 public class Client implements IClientCli, Runnable {
 
@@ -12,6 +18,8 @@ public class Client implements IClientCli, Runnable {
 	private Config config;
 	private InputStream userRequestStream;
 	private PrintStream userResponseStream;
+	private Channel channel = null;
+	private Shell shell;
 
 	/**
 	 * @param componentName
@@ -30,54 +38,79 @@ public class Client implements IClientCli, Runnable {
 		this.userRequestStream = userRequestStream;
 		this.userResponseStream = userResponseStream;
 
-		// TODO
+		initializeShell();
+		initializeSocket();
 	}
 
+	private void initializeShell() {
+		shell = new Shell(componentName, userRequestStream, userResponseStream);
+		shell.register(this);
+	}
+	
+	private void initializeSocket() {
+		try {
+			channel = new TcpChannel(new Socket(config.getString("controller.host"), config.getInt("controller.tcp.port")));
+		} catch (UnknownHostException e) {
+			System.out.println("Couldn't resolve IP address: " + e.getMessage());
+		} catch (IOException e) {
+			System.out.println("Exception on socket creation: " + e.getMessage());
+		}
+	}
+	
 	@Override
 	public void run() {
-		// TODO
+		System.out.println(componentName + " up and waiting for commands!");
+		shell.run();
 	}
 
 	@Override
+	@Command
 	public String login(String username, String password) throws IOException {
-		// TODO Auto-generated method stub
-		return null;
+		channel.println(String.format("!login %s %s", username, password));
+		return channel.readLine();
 	}
 
 	@Override
+	@Command
 	public String logout() throws IOException {
-		// TODO Auto-generated method stub
-		return null;
+		channel.println("!logout");
+		return channel.readLine();
 	}
 
 	@Override
+	@Command
 	public String credits() throws IOException {
-		// TODO Auto-generated method stub
-		return null;
+		channel.println("!credits");
+		return channel.readLine();
 	}
 
 	@Override
+	@Command
 	public String buy(long credits) throws IOException {
-		// TODO Auto-generated method stub
-		return null;
+		channel.println(String.format("!buy %d", credits));
+		return channel.readLine();
 	}
 
 	@Override
+	@Command
 	public String list() throws IOException {
-		// TODO Auto-generated method stub
-		return null;
+		channel.println("!list");
+		return channel.readLine();
 	}
 
 	@Override
+	@Command
 	public String compute(String term) throws IOException {
-		// TODO Auto-generated method stub
-		return null;
+		channel.println(String.format("!compute %s", term));
+		return channel.readLine();
 	}
 
 	@Override
+	@Command
 	public String exit() throws IOException {
-		// TODO Auto-generated method stub
-		return null;
+		shell.close();
+		channel.close();
+		return "Shut down completed! Bye ..";
 	}
 
 	/**
@@ -87,7 +120,7 @@ public class Client implements IClientCli, Runnable {
 	public static void main(String[] args) {
 		Client client = new Client(args[0], new Config("client"), System.in,
 				System.out);
-		// TODO: start the client
+		new Thread(client).start();
 	}
 
 	// --- Commands needed for Lab 2. Please note that you do not have to

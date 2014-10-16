@@ -45,7 +45,7 @@ public class AliveTask extends TimerTask {
 
 	private void constructAliveMessage() {
 		aliveMessage = String.format("!alive %d %s",
-				config.getInt("controller.udp.port"),
+				config.getInt("tcp.port"),
 				config.getString("node.operators"));
 	}
 

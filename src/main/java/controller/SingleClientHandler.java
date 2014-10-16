@@ -2,11 +2,11 @@ package controller;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
-
-import com.sun.jmx.snmp.daemon.CommunicationException;
 
 import node.ComputationChannel;
 import node.ComputationResult;
@@ -14,7 +14,6 @@ import node.NodeRequest;
 import util.Channel;
 import util.Config;
 import util.FixedParameters;
-import util.ResultStatus;
 import util.TcpChannel;
 
 public class SingleClientHandler implements Runnable {
@@ -24,7 +23,9 @@ public class SingleClientHandler implements Runnable {
 	private ConcurrentHashMap<String, User> users;
 	private ClientChannel channel;
 	private User currentUser = null;
-
+	private ComputationChannel currentComputationChannel = null;
+	private boolean sessionIsBeingTerminated = false;
+	
 	public SingleClientHandler(
 			Channel channel,
 			ConcurrentHashMap<Character, ConcurrentSkipListSet<Node>> activeNodes,
@@ -64,6 +65,9 @@ public class SingleClientHandler implements Runnable {
 					break; // Skip invalid requests
 				}
 			}
+		} catch (SocketException e) {
+			sessionIsBeingTerminated = true;
+			System.out.println("Socket to client closed: " + e.getMessage());
 		} catch (IOException e) {
 			System.out.println("Error on getting request: " + e.getMessage());
 		} finally {
@@ -133,7 +137,7 @@ public class SingleClientHandler implements Runnable {
 		return builder.toString();
 	}
 
-	private String handleCompute(ClientRequest request) {
+	private String handleCompute(ClientRequest request) throws IOException {
 		if (!currentUser.hasEnoughCredits(request))
 			return "Not enough credits!";
 		if (!canBeComputed(request))
@@ -148,66 +152,82 @@ public class SingleClientHandler implements Runnable {
 		int remainingOperationsCount = totalOperatorCount;
 		char nextOperator = operators[0];
 
-		while (remainingOperationsCount != 0) {
-			NodeRequest computationRequest = new NodeRequest(firstOperand,
-													  nextOperator, 
-													  secondOperand);
+		try {
+			while (remainingOperationsCount != 0) {
+				NodeRequest computationRequest = new NodeRequest(firstOperand,
+						nextOperator, 
+						secondOperand);
 
-			boolean foundAvailableNode = false;
-			Iterator<Node> orderedNodesForNextOperator = activeNodes.get(nextOperator).descendingIterator();
-			
-			
-			while(!foundAvailableNode && orderedNodesForNextOperator.hasNext()) {
-				
-				Node nextNodeToTry = orderedNodesForNextOperator.next();
-				if(nextNodeToTry.isOnline()) {
-					ComputationChannel computationChannel = null;
-					
-					try {
-						computationChannel = new ComputationChannel(
-											 new TcpChannel(
-											 new Socket(nextNodeToTry.getIPAddress(), nextNodeToTry.getTCPPort())));
-						computationChannel.requestComputation(computationRequest);
-						
-						ComputationResult result = computationChannel.getResult();
-						
-						switch(result.getStatus()) {
-						case OK:
-							foundAvailableNode = true;
-							firstOperand = result.getNumber();
-							remainingOperationsCount--;
-							nextOperator = operators[totalOperatorCount - remainingOperationsCount]; 
-							secondOperand = operands[totalOperandCount - remainingOperationsCount];
-							updateUsageStatistics(nextNodeToTry, result);
-							break;
-						case DivisionByZero:
-							deductCredits(totalOperatorCount - remainingOperationsCount + 1);
-							return "Error: division by 0";
-						case OperatorNotSupported:
-							break; // Just skip this node for now and try another one
-						default:
-							break; // Just skip this node for now and try another one
+				boolean foundAvailableNode = false;
+				Iterator<Node> orderedNodesForNextOperator = activeNodes.get(nextOperator).descendingIterator();
+
+
+				while(!foundAvailableNode && orderedNodesForNextOperator.hasNext()) {
+
+					Node nextNodeToTry = orderedNodesForNextOperator.next();
+					if(nextNodeToTry.isOnline()) {
+						currentComputationChannel = null;
+						try {
+							currentComputationChannel = new ComputationChannel(
+									new TcpChannel(
+											new Socket(nextNodeToTry.getIPAddress(), nextNodeToTry.getTCPPort())));
+							currentComputationChannel.requestComputation(computationRequest);
+
+							ComputationResult result = currentComputationChannel.getResult();
+
+							switch(result.getStatus()) {
+							case OK:
+								foundAvailableNode = true;
+								firstOperand = result.getNumber();
+								remainingOperationsCount--;
+								nextOperator = operators[totalOperatorCount - remainingOperationsCount]; 
+								secondOperand = operands[totalOperandCount - remainingOperationsCount];
+								updateUsageStatistics(nextNodeToTry, result);
+								break;
+							case DivisionByZero:
+								deductCredits(totalOperatorCount - remainingOperationsCount + 1);
+								return "Error: division by 0";
+							case OperatorNotSupported:
+								break; // Just skip this node for now and try another one
+							default:
+								break; // Just skip this node for now and try another one
+							}
+						} catch (SocketTimeoutException e) {
+							// Just skip this node for now and try another one
+						} finally {
+							if(currentComputationChannel != null)
+								currentComputationChannel.close();
 						}
-					} catch (IOException e) {
-						
-						// Just skip this node for now and try another one
-					} finally {
-						if(computationChannel != null)
-							computationChannel.close();
+
 					}
-					
 				}
+				if(!foundAvailableNode)
+					return String.format("Can't compute that sort of arithmetic expression! (All nodes for the '%c' operator suddenly became unavailable)", nextOperator);
+
+				deductCredits(totalOperatorCount);
+				return String.valueOf(firstOperand);
+
 			}
-			if(!foundAvailableNode)
-				return String.format("Can't compute that sort of arithmetic expression! (All nodes for the '%c' operator suddenly became unavailable)", nextOperator);
-			
-			deductCredits(totalOperatorCount);
+
 			return String.valueOf(firstOperand);
-			
+		} catch (SocketException e) {
+			System.out.println("Socket to node closed: " + e.getMessage());
+			if(!sessionIsBeingTerminated)
+				return "Error: An internal error occured";
+			else
+				throw e;
+		} catch (IOException e) {
+			System.out.println("Error on getting result: " + e.getMessage());
+			if(!sessionIsBeingTerminated)
+				return "Error: An internal error occured";
+			else
+				throw e;
+		} finally {
+			if(currentComputationChannel != null)
+				currentComputationChannel.close();
 		}
-		
-		return String.valueOf(firstOperand);
 	}
+
 
 	private boolean canBeComputed(ClientRequest request) {
 		String availableOperators = getAvailableOperators();
@@ -223,13 +243,13 @@ public class SingleClientHandler implements Runnable {
 	private void updateUsageStatistics(Node node, ComputationResult result) {
 		int usageCost = calculateUsageCost(result);
 		node.setUsage(node.getUsage() + usageCost);
-		
+
 		for(ConcurrentSkipListSet<Node> nodeList : activeNodes.values())
 			if(nodeList.contains(node)) {
 				nodeList.remove(node);
 				nodeList.add(node);
 			}
-		
+
 	}
 
 	private int calculateUsageCost(ComputationResult result) {
@@ -238,7 +258,7 @@ public class SingleClientHandler implements Runnable {
 
 	private void deductCredits(int operatorCount) {
 		currentUser.setCredits(currentUser.getCredits() - FixedParameters.CREDIT_COST_PER_OPERATOR * operatorCount);
-		
+
 	}
 
 }

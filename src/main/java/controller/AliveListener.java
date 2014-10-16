@@ -49,7 +49,7 @@ public class AliveListener extends TerminableThread {
 					packet = receiveMessage();
 
 					String aliveMessage = new String(packet.getData());
-					splitMessage = aliveMessage.split("\\s");
+					splitMessage = aliveMessage.trim().split("\\s");
 
 					if (messageIsValid())
 						updateActiveNodes();
@@ -121,7 +121,7 @@ public class AliveListener extends TerminableThread {
 		Arrays.sort(oldArray);
 		Arrays.sort(newArray);
 		
-		return Arrays.equals(oldArray, newArray);
+		return !Arrays.equals(oldArray, newArray);
 	}
 	
 	private void removeFromActiveNodes(Node node) {
@@ -141,7 +141,6 @@ public class AliveListener extends TerminableThread {
 	}
 
 	private void addToActiveNodes(Node node) {
-		
 		for (char operator : node.getAllowedOperators().toCharArray()) {
 			if (activeNodes.containsKey(operator)) {
 				activeNodes.get(operator).add(node);

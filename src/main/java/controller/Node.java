@@ -51,7 +51,7 @@ public class Node implements Comparable<Node>{
 		return uuid;
 	}
 	public boolean isOnline() {
-		return System.currentTimeMillis() - TimeoutPeriod > lastAliveTimestamp;
+		return System.currentTimeMillis() - lastAliveTimestamp < TimeoutPeriod;
 	}
 	
 	public String getNetworkID() {
@@ -77,9 +77,11 @@ public class Node implements Comparable<Node>{
 		builder.append(address.getHostAddress());
 		builder.append(" Port: ");
 		builder.append(port);
+		builder.append(" ");
 		builder.append(isOnlineString());
 		builder.append(" Usage: ");
 		builder.append(usage);
+		builder.append('\n');
 		return builder.toString();
 	}
 	

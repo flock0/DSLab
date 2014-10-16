@@ -124,6 +124,7 @@ public class CloudController implements ICloudControllerCli, Runnable {
 	}
 
 	@Override
+	@Command
 	public String users() throws IOException {
 		int counter = 1;
 		StringBuilder builder = new StringBuilder();
@@ -138,9 +139,13 @@ public class CloudController implements ICloudControllerCli, Runnable {
 	}
 
 	@Override
+	@Command
 	public String exit() throws IOException {
-		// TODO Auto-generated method stub
-		return null;
+		clientListener.shutdown();
+		nodePurgeTimer.cancel();
+		aliveListener.shutdown();
+		shell.close();
+		return "Shut down completed! Bye ..";
 	}
 
 	/**
