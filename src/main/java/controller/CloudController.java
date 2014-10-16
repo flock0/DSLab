@@ -47,10 +47,9 @@ public class CloudController implements ICloudControllerCli, Runnable {
 		
 		nodePurgeTimer = new Timer();
 		Node.TimeoutPeriod = config.getInt("node.timeout");
+		loadUsers();
 		initializeNodeMaps();
 		initializeListeners();
-		
-		loadUsers();
 		initializeShell();
 	}
 

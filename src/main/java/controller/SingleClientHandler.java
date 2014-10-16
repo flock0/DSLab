@@ -148,12 +148,14 @@ public class SingleClientHandler implements Runnable {
 		final int totalOperatorCount = operators.length;
 		final int totalOperandCount = operands.length;
 		int firstOperand = operands[0];
-		int secondOperand = operands[1];
+		int secondOperand;
 		int remainingOperationsCount = totalOperatorCount;
-		char nextOperator = operators[0];
+		char nextOperator;
 
 		try {
 			while (remainingOperationsCount != 0) {
+				nextOperator = operators[totalOperatorCount - remainingOperationsCount]; 
+				secondOperand = operands[totalOperandCount - remainingOperationsCount];
 				NodeRequest computationRequest = new NodeRequest(firstOperand,
 						nextOperator, 
 						secondOperand);
@@ -180,8 +182,7 @@ public class SingleClientHandler implements Runnable {
 								foundAvailableNode = true;
 								firstOperand = result.getNumber();
 								remainingOperationsCount--;
-								nextOperator = operators[totalOperatorCount - remainingOperationsCount]; 
-								secondOperand = operands[totalOperandCount - remainingOperationsCount];
+								
 								updateUsageStatistics(nextNodeToTry, result);
 								break;
 							case DivisionByZero:
