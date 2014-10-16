@@ -26,4 +26,8 @@ public abstract class ChannelDecorator implements Channel {
 		underlying.close();
 	}
 
+	@Override
+	public boolean isClosed() {
+		return underlying.isClosed();
+	}
 }

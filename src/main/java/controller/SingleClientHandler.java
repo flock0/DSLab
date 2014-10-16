@@ -12,6 +12,7 @@ import node.ComputationChannel;
 import node.ComputationResult;
 import node.NodeRequest;
 import util.Channel;
+import util.ChannelSet;
 import util.Config;
 import util.FixedParameters;
 import util.TcpChannel;
@@ -25,14 +26,17 @@ public class SingleClientHandler implements Runnable {
 	private User currentUser = null;
 	private ComputationChannel currentComputationChannel = null;
 	private boolean sessionIsBeingTerminated = false;
+	private ChannelSet openChannels;
 	
 	public SingleClientHandler(
 			Channel channel,
 			ConcurrentHashMap<Character, ConcurrentSkipListSet<Node>> activeNodes,
-			ConcurrentHashMap<String, User> users, Config config) {
+			ConcurrentHashMap<String, User> users, ChannelSet openChannels, Config config) {
 		this.config = config;
 		this.activeNodes = activeNodes;
 		this.users = users;
+		this.openChannels = openChannels;
+		
 		this.channel = new ClientChannel(channel);
 	}
 
@@ -40,8 +44,6 @@ public class SingleClientHandler implements Runnable {
 	public void run() {
 		try {
 			while (true) {
-				if(Thread.currentThread().isInterrupted())
-					break;
 				ClientRequest request = channel.getRequest();
 
 				switch (request.getType()) {
@@ -158,8 +160,6 @@ public class SingleClientHandler implements Runnable {
 
 		try {
 			while (remainingOperationsCount != 0) {
-				if(Thread.currentThread().isInterrupted())
-					break;
 				
 				nextOperator = operators[totalOperatorCount - remainingOperationsCount]; 
 				secondOperand = operands[totalOperandCount - remainingOperationsCount];
@@ -180,6 +180,7 @@ public class SingleClientHandler implements Runnable {
 							currentComputationChannel = new ComputationChannel(
 									new TcpChannel(
 											new Socket(nextNodeToTry.getIPAddress(), nextNodeToTry.getTCPPort())));
+							openChannels.add(currentComputationChannel);
 							currentComputationChannel.requestComputation(computationRequest);
 
 							ComputationResult result = currentComputationChannel.getResult();
@@ -218,12 +219,7 @@ public class SingleClientHandler implements Runnable {
 			}
 
 			return String.valueOf(firstOperand);
-		} catch (SocketException e) {
-			System.out.println("Socket to node closed: " + e.getMessage());
-			if(!sessionIsBeingTerminated)
-				return "Error: An internal error occured";
-			else
-				throw e;
+			
 		} catch (IOException e) {
 			System.out.println("Error on getting result: " + e.getMessage());
 			if(!sessionIsBeingTerminated)

@@ -1,6 +1,7 @@
 package controller;
 
 import java.io.IOException;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,11 +20,6 @@ public class ClientChannel extends ChannelDecorator {
 	
 	public ClientRequest getRequest() throws IOException {
 		String message = underlying.readLine();
-		if(message == null) {
-			ClientRequest request = new ClientRequest();
-			request.setType(RequestType.Invalid);
-			return request;
-		}
 		
 		String[] split = message.split("\\s");
 		

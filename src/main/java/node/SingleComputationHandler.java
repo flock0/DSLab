@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.Socket;
 
 import util.Channel;
+import util.ChannelSet;
 import util.Config;
 import util.ResultStatus;
 
@@ -12,11 +13,12 @@ public class SingleComputationHandler implements Runnable {
 	private ComputationChannel channel;
 	private Config config;
 	private String allowedOperators;
+	private ChannelSet openChannels;
 
 	public SingleComputationHandler(Channel channel, Config config) {
 		this.channel = new ComputationChannel(channel);
 		this.config = config;
-
+		
 		allowedOperators = config.getString("node.operators");
 	}
 

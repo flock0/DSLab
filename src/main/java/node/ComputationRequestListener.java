@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 import javax.print.CancelablePrintJob;
 
 import util.Channel;
+import util.ChannelSet;
 import util.Config;
 import util.TcpChannel;
 import util.TerminableThread;
@@ -25,11 +26,13 @@ public class ComputationRequestListener extends TerminableThread {
 	private Config config;
 	private ServerSocket serverSocket = null;
 	private ExecutorService threadPool;
+	private ChannelSet openChannels;
 
 	public ComputationRequestListener(Config config) {
 		this.config = config;
 		openServerSocket();
 		createThreadPool();
+		openChannels = new ChannelSet();
 	}
 
 	private void openServerSocket() {
@@ -50,11 +53,10 @@ public class ComputationRequestListener extends TerminableThread {
 		if (serverSocket != null) {
 			try {
 				while (true) {
-					Socket socket = null;
-
 					Channel nextRequest = new TcpChannel(serverSocket.accept());
-					threadPool.execute(new SingleComputationHandler(
-							nextRequest, config));
+					openChannels.add(nextRequest);
+					threadPool.execute(new SingleComputationHandler(nextRequest, config));
+					openChannels.cleanUp();
 
 				}
 			} catch (SocketException e) {
@@ -87,12 +89,13 @@ public class ComputationRequestListener extends TerminableThread {
 	private void shutdownPoolAndAwaitTermination() {
 		threadPool.shutdown(); // Disable new tasks from being submitted
 		try {
+			openChannels.closeAll();
 			// Wait a while for existing tasks to terminate
 			if (!threadPool.awaitTermination(3, TimeUnit.SECONDS)) {
 				threadPool.shutdownNow(); // Cancel currently executing tasks
 				// Wait a while for tasks to respond to being cancelled
 				if (!threadPool.awaitTermination(3, TimeUnit.SECONDS))
-					System.err.println("Pool did not terminate");
+					System.err.println("Computation ThreadPool did not terminate");
 			}
 		} catch (InterruptedException ie) {
 			// (Re-)Cancel if current thread also interrupted

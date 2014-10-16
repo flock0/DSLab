@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.net.SocketException;
 
 /**
  * A two-way communication channel based on a TCP connection
@@ -34,8 +35,11 @@ public class TcpChannel implements Channel {
 
 	@Override
 	public String readLine() throws IOException {
-		return reader.readLine();
-		
+		String message = reader.readLine();
+		if(message == null)
+			throw new SocketException("socket closed");
+		else
+			return message;
 	}
 
 	@Override
@@ -46,15 +50,19 @@ public class TcpChannel implements Channel {
 	@Override
 	public void close() {
 		try {
-			if (reader != null)
-				reader.close();
-			if (writer != null)
-				writer.close();
 			if (socket != null && !socket.isClosed())
 				socket.close();
 		} catch (IOException e) {
 			// Nothing we can do about it
 		}
+	}
+
+	@Override
+	public boolean isClosed() {
+		if(socket != null)
+			return socket.isClosed();
+		else
+			return true;
 	}
 
 }

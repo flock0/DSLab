@@ -9,4 +9,5 @@ public interface Channel {
 	public String readLine() throws IOException;
 	public void println(String out);
 	public void close();
+	public boolean isClosed();
 }

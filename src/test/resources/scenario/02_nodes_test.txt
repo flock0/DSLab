@@ -22,7 +22,14 @@ controller:		!nodes
 
 node1:		!exit
 
-bill:		!list
+# Waste some time, so that node1 can timeout. If this test fails often, remove the following verify
+*	Node		node2
+*	Node		node4
+*	Client		fake1
+*	Client		fake2
+*	Client		fake3
+*	Client		fake4
+controller:		!nodes
 >			verify(".*127.0.0.1.*13362.*offline.*", T(test.util.Flag).REGEX)
 
 controller: !exit

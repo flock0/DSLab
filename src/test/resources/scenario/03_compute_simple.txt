@@ -1,0 +1,19 @@
+*	CloudController	controller
+*	Client			bill
+*	Node			node1
+
+bill:		!login bill 23456
+>			verify("success")
+
+bill:		!compute 3 + 8
+>			verify("11")
+
+bill:		!credits
+>			verify("450")
+
+controller:		!nodes
+>			verify(".*127.0.0.1.*13362.*online.*100.*", T(test.util.Flag).REGEX)
+
+controller: !exit
+bill:		!exit
+node1:		!exit

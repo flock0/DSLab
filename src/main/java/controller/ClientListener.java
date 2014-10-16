@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 import node.SingleComputationHandler;
 import util.Channel;
 import util.Config;
+import util.ChannelSet;
 import util.TcpChannel;
 import util.TerminableThread;
 
@@ -23,6 +24,7 @@ public class ClientListener extends TerminableThread {
 	private ExecutorService threadPool;
 	private ConcurrentHashMap<Character, ConcurrentSkipListSet<Node>> activeNodes;
 	private ConcurrentHashMap<String, User> users;
+	private ChannelSet openChannels;
 
 	public ClientListener(ConcurrentHashMap<String, User> users, ConcurrentHashMap<Character, ConcurrentSkipListSet<Node>> activeNodes, Config config) {
 		this.users = users;
@@ -31,6 +33,7 @@ public class ClientListener extends TerminableThread {
 		
 		openServerSocket();
 		createThreadPool();
+		openChannels = new ChannelSet();
 	}
 
 	private void openServerSocket() {
@@ -50,10 +53,10 @@ public class ClientListener extends TerminableThread {
 		if (serverSocket != null) {
 			try {
 				while (true) {
-					Socket socket = null;
-
 					Channel nextRequest = new TcpChannel(serverSocket.accept());
-					threadPool.execute(new SingleClientHandler(nextRequest, activeNodes, users, config));
+					openChannels.add(nextRequest);
+					threadPool.execute(new SingleClientHandler(nextRequest, activeNodes, users, openChannels, config));					
+					openChannels.cleanUp();
 
 				}
 			} catch (SocketException e) {
@@ -67,7 +70,7 @@ public class ClientListener extends TerminableThread {
 	public void shutdown() {
 		try {
 			serverSocket.close();
-			shutdownPoolAndAwaitTermination();
+			shutdownSocketsAndPool();
 
 		} catch (IOException e) {
 			// Nothing we can do about that
@@ -82,15 +85,16 @@ public class ClientListener extends TerminableThread {
 	 * Taken from http://docs.oracle.com/javase/7/docs/api/java/util/concurrent/
 	 * ExecutorService.html
 	 */
-	private void shutdownPoolAndAwaitTermination() {
+	private void shutdownSocketsAndPool() {
 		threadPool.shutdown(); // Disable new tasks from being submitted
 		try {
+			openChannels.closeAll();
 			// Wait a while for existing tasks to terminate
 			if (!threadPool.awaitTermination(3, TimeUnit.SECONDS)) {
 				threadPool.shutdownNow(); // Cancel currently executing tasks
 				// Wait a while for tasks to respond to being cancelled
 				if (!threadPool.awaitTermination(3, TimeUnit.SECONDS))
-					System.err.println("Pool did not terminate");
+					System.err.println("Client ThreadPool did not terminate");
 			}
 		} catch (InterruptedException ie) {
 			// (Re-)Cancel if current thread also interrupted
