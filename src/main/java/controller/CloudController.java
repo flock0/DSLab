@@ -9,6 +9,7 @@ import java.util.Timer;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
+import cli.Command;
 import cli.Shell;
 
 public class CloudController implements ICloudControllerCli, Runnable {
@@ -23,6 +24,7 @@ public class CloudController implements ICloudControllerCli, Runnable {
 	private ConcurrentHashMap<String, Node> allNodes;
 	private ConcurrentHashMap<String, User> users;
 	private AliveListener aliveListener;
+	private ClientListener clientListener;
 	
 
 	/**
@@ -46,7 +48,8 @@ public class CloudController implements ICloudControllerCli, Runnable {
 		nodePurgeTimer = new Timer();
 		Node.TimeoutPeriod = config.getInt("node.timeout");
 		initializeNodeMaps();
-		aliveListener = new AliveListener(activeNodes, allNodes, config);
+		initializeListeners();
+		
 		loadUsers();
 		initializeShell();
 	}
@@ -56,6 +59,11 @@ public class CloudController implements ICloudControllerCli, Runnable {
 		allNodes = new ConcurrentHashMap<String, Node>();
 	}
 
+	private void initializeListeners() {
+		aliveListener = new AliveListener(activeNodes, allNodes, config);
+		clientListener = new ClientListener(config);
+	}
+	
 	private void loadUsers() {
 		users = new ConcurrentHashMap<>();
 		Config userConfig = new Config("user");
@@ -81,8 +89,7 @@ public class CloudController implements ICloudControllerCli, Runnable {
 	public void run() {
 		
 		startNodePurgeTimer();
-		startAliveListener();
-		startRequestListener();
+		startListeners();
 		startShell();
 		
 	}
@@ -91,8 +98,9 @@ public class CloudController implements ICloudControllerCli, Runnable {
 		nodePurgeTimer.schedule(new NodePurgeTask(activeNodes, config), 0, config.getInt("node.checkPeriod"));
 	}
 
-	private void startAliveListener() {
+	private void startListeners() {
 		aliveListener.start();
+		clientListener.start();
 	}
 
 	private void startShell() {
@@ -103,14 +111,30 @@ public class CloudController implements ICloudControllerCli, Runnable {
 	@Override
 	@Command
 	public String nodes() throws IOException {
-		// TODO Auto-generated method stub
-		return null;
+		int counter = 1;
+		StringBuilder builder = new StringBuilder();
+		
+		for(Node n : allNodes.values()) {
+			builder.append(counter++);
+			builder.append(". ");
+			builder.append(n);
+		}
+		
+		return builder.toString();
 	}
 
 	@Override
 	public String users() throws IOException {
-		// TODO Auto-generated method stub
-		return null;
+		int counter = 1;
+		StringBuilder builder = new StringBuilder();
+		
+		for(User u : users.values()) {
+			builder.append(counter++);
+			builder.append(". ");
+			builder.append(u);
+		}
+		
+		return builder.toString();
 	}
 
 	@Override

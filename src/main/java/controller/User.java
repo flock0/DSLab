@@ -32,4 +32,21 @@ public class User {
 	public String getPassword() {
 		return password;
 	}
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append(username);
+		builder.append(" ");
+		builder.append(isOnlineString());
+		builder.append(" Credits: ");
+		builder.append(credits);
+		return builder.toString();
+	}
+	
+	private String isOnlineString() {
+		if(isOnline())
+			return "online";
+		else
+			return "offline";
+	}
 }

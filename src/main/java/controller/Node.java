@@ -70,4 +70,23 @@ public class Node implements Comparable<Node>{
 			return uuid.compareTo(other.getUUID()); // Avoid returning 0 by comparing the random UUIDs
 		}
 	}
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("IP: ");
+		builder.append(address.getHostAddress());
+		builder.append(" Port: ");
+		builder.append(port);
+		builder.append(isOnlineString());
+		builder.append(" Usage: ");
+		builder.append(usage);
+		return builder.toString();
+	}
+	
+	private String isOnlineString() {
+		if(isOnline())
+			return "online";
+		else
+			return "offline";
+	}
 }

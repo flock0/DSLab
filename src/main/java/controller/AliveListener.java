@@ -9,8 +9,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 import util.Config;
+import util.TerminableThread;
 
-public class AliveListener extends Thread {
+public class AliveListener extends TerminableThread {
 
 	private Config config;
 	private ConcurrentHashMap<Character, ConcurrentSkipListSet<Node>> activeNodes;
@@ -159,5 +160,10 @@ public class AliveListener extends Thread {
 			return false;
 		}
 		return true;
+	}
+
+	@Override
+	public void shutdown() {
+		datagramSocket.close();
 	}
 }

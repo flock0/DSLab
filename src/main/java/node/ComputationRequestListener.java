@@ -13,13 +13,14 @@ import javax.print.CancelablePrintJob;
 import util.Channel;
 import util.Config;
 import util.TcpChannel;
+import util.TerminableThread;
 
 /**
  * Listens for incoming computation requests and
  * delegates them using a thread pool.
  *
  */
-public class ComputationRequestListener extends Thread {
+public class ComputationRequestListener extends TerminableThread {
 
 	private Config config;
 	private ServerSocket serverSocket = null;
@@ -51,7 +52,7 @@ public class ComputationRequestListener extends Thread {
 					Socket socket = null;
 
 					Channel nextRequest = new TcpChannel(serverSocket.accept());
-					threadPool.execute(new SingleRequestHandler(nextRequest, config));
+					threadPool.execute(new SingleComputationHandler(nextRequest, config));
 
 				}
 			} catch (SocketException e) {

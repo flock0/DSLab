@@ -1,6 +1,7 @@
 package node;
 
 import util.Config;
+import util.TerminableThread;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,7 +25,7 @@ public class Node implements INodeCli, Runnable {
 	private PrintStream userResponseStream;
 	private Shell shell;
 	private Timer aliveTimer;
-	private ComputationRequestListener listener;
+	private TerminableThread listener;
 	
 	/**
 	 * @param componentName

@@ -6,13 +6,13 @@ import java.net.Socket;
 import util.Channel;
 import util.Config;
 
-public class SingleRequestHandler implements Runnable {
+public class SingleComputationHandler implements Runnable {
 
 	private ComputationChannel channel;
 	private Config config;
 	private String allowedOperators;
 
-	public SingleRequestHandler(Channel channel, Config config) {
+	public SingleComputationHandler(Channel channel, Config config) {
 		this.channel = new ComputationChannel(channel);
 		this.config = config;
 
