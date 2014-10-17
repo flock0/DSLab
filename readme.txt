@@ -11,3 +11,13 @@ Bsp: refreshNodes: removeFromActiveNodes() und addToActiveNodes nur halbat.
 Dann purgeInactiveNodes: removeFromActiveNodes() entfernt die, die vorher halbat hinzugefügt wurden.
 Dann refreshNodes: addToActiveNodes wird fertig gemacht.
 Ergebnis: Node ist in Operator-Listen nur halbat drinnen.
+
+
+
+Interrupts mehrstufig: 
+CloudController stößt shutdown an
+ClientListener schließt den ServerSocket, dann jeden ClientSocket, wodurch die Threads im ThreadPool interrupted werden
+Danach kann der ThreadPool heruntergefahren werden
+
+
+analog beim Node mit dessen ComputationRequestListenern

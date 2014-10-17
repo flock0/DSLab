@@ -1,0 +1,22 @@
+*	CloudController	controller
+*	Client			bill
+*	Node			node3
+*	Node			node4
+
+bill:		!login bill 23456
+>			verify("success")
+
+bill:		!compute 5 + 10 * 2 + 10
+>			verify("40")
+
+bill:		!credits
+>			verify("350")
+
+controller:	!nodes
+>			verify("Usage: 200")
+controller:	!nodes
+>			verify("Usage: 100")
+
+controller: !exit
+bill:		!exit
+node1:		!exit

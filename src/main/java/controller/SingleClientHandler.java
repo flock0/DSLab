@@ -212,12 +212,9 @@ public class SingleClientHandler implements Runnable {
 				}
 				if(!foundAvailableNode)
 					return String.format("Can't compute that sort of arithmetic expression! (All nodes for the '%c' operator suddenly became unavailable)", nextOperator);
-
-				deductCredits(totalOperatorCount);
-				return String.valueOf(firstOperand);
-
 			}
 
+			deductCredits(totalOperatorCount);
 			return String.valueOf(firstOperand);
 			
 		} catch (IOException e) {
