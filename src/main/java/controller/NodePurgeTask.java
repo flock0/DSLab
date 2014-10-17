@@ -33,16 +33,7 @@ public class NodePurgeTask extends TimerTask {
 	}
 
 	private void removeFromActiveNodes(Node node) {
-		for(Character operator : activeNodes.keySet()) {
-			ConcurrentSkipListSet<Node> set = activeNodes.get(operator);
+		for(ConcurrentSkipListSet<Node> set : activeNodes.values())
 			set.remove(node);
-			if(set.isEmpty())
-				removeFromAllowedOperators(operator);
-		}
 	}
-
-	private void removeFromAllowedOperators(Character operator) {
-		config.setProperty("allowedOperators", config.getString("allowedOperators").replace(operator.toString(), ""));
-	}
-
 }

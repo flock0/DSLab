@@ -141,9 +141,7 @@ public class AliveListener extends TerminableThread {
 	}
 
 	private void addToActiveNodes(Node node) {
-		String nodeOperators = node.getAllowedOperators();
-		updateAllowedOperators(nodeOperators);
-		for (char operator : nodeOperators.toCharArray()) {
+		for (char operator : node.getAllowedOperators().toCharArray()) {
 			if (activeNodes.containsKey(operator)) {
 				activeNodes.get(operator).add(node);
 			} else {
@@ -154,21 +152,6 @@ public class AliveListener extends TerminableThread {
 
 	}
 
-	private void updateAllowedOperators(String nodeOperators) {
-		config.setProperty("allowedProperties", removeDuplicates(config.getString("allowedProperties") + nodeOperators));
-	}
-
-	static String removeDuplicates(String s) {
-	    StringBuilder noDupes = new StringBuilder();
-	    for (int i = 0; i < s.length(); i++) {
-	        String si = s.substring(i, i + 1);
-	        if (noDupes.indexOf(si) == -1) {
-	            noDupes.append(si);
-	        }
-	    }
-	    return noDupes.toString();
-	}
-	
 	private boolean isInteger(String s) {
 		try {
 			Integer.parseInt(s);

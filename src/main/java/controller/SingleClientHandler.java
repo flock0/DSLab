@@ -135,7 +135,12 @@ public class SingleClientHandler implements Runnable {
 	}
 
 	private String getAvailableOperators() {
-		return config.getString("availableOperators");
+		StringBuilder builder = new StringBuilder();
+		for (Character operator : activeNodes.keySet())
+			if (!activeNodes.get(operator).isEmpty())
+				builder.append(operator);
+
+		return builder.toString();
 	}
 
 	private String handleCompute(ClientRequest request) throws IOException {
