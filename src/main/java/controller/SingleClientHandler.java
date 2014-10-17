@@ -135,12 +135,7 @@ public class SingleClientHandler implements Runnable {
 	}
 
 	private String getAvailableOperators() {
-		StringBuilder builder = new StringBuilder();
-		for (Character operator : activeNodes.keySet())
-			if (!activeNodes.get(operator).isEmpty())
-				builder.append(operator);
-
-		return builder.toString();
+		return config.getString("availableOperators");
 	}
 
 	private String handleCompute(ClientRequest request) throws IOException {
@@ -168,7 +163,7 @@ public class SingleClientHandler implements Runnable {
 						secondOperand);
 
 				boolean foundAvailableNode = false;
-				Iterator<Node> orderedNodesForNextOperator = activeNodes.get(nextOperator).descendingIterator();
+				Iterator<Node> orderedNodesForNextOperator = activeNodes.get(nextOperator).iterator();
 
 
 				while(!foundAvailableNode && orderedNodesForNextOperator.hasNext()) {
