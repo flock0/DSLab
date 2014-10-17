@@ -136,10 +136,11 @@ public class SingleClientHandler implements Runnable {
 
 	private String getAvailableOperators() {
 		StringBuilder builder = new StringBuilder();
-		for (Character operator : activeNodes.keySet())
-			if (!activeNodes.get(operator).isEmpty())
-				builder.append(operator);
-
+		synchronized(activeNodes) {
+			for (Character operator : activeNodes.keySet())
+				if (!activeNodes.get(operator).isEmpty())
+					builder.append(operator);
+		}
 		return builder.toString();
 	}
 
@@ -243,13 +244,16 @@ public class SingleClientHandler implements Runnable {
 
 	private void updateUsageStatistics(Node node, ComputationResult result) {
 		int usageCost = calculateUsageCost(result);
-		node.setUsage(node.getUsage() + usageCost);
-
-		for(ConcurrentSkipListSet<Node> nodeList : activeNodes.values())
-			if(nodeList.contains(node)) {
-				nodeList.remove(node);
-				nodeList.add(node);
-			}
+		synchronized(node) {
+			node.setUsage(node.getUsage() + usageCost);
+		}
+		synchronized(activeNodes) {
+			for(ConcurrentSkipListSet<Node> nodeList : activeNodes.values())
+				if(nodeList.contains(node)) {
+					nodeList.remove(node);
+					nodeList.add(node);
+				}
+		}
 
 	}
 

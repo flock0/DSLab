@@ -28,7 +28,9 @@ public class NodePurgeTask extends TimerTask {
 			for(Node node : singleOperatorList)
 				if(!node.isOnline())
 					synchronized(node) {
-						removeFromActiveNodes(node);
+						synchronized(activeNodes) {
+							removeFromActiveNodes(node);
+						}
 					}		
 	}
 

@@ -99,16 +99,20 @@ public class AliveListener extends TerminableThread {
 		if(!node.isOnline()) {
 			
 			node.setLastAliveMessage(lastAliveTimestamp);
-			addToActiveNodes(node);
+			synchronized(activeNodes) {
+				addToActiveNodes(node);
+			}
 			
 		} else {
 			node.setLastAliveMessage(lastAliveTimestamp);
 			
 			if(operatorsChanged(node.getAllowedOperators(), splitMessage[2])) {
 				synchronized(node) {
-					node.setAllowedOperators(splitMessage[2]);
-					removeFromActiveNodes(node);
-					addToActiveNodes(node);
+					synchronized(activeNodes) {
+						node.setAllowedOperators(splitMessage[2]);
+						removeFromActiveNodes(node);
+						addToActiveNodes(node);
+					}
 				}
 			}
 		}
