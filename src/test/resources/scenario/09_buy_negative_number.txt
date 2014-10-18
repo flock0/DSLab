@@ -1,0 +1,20 @@
+*	CloudController	controller
+*	Client			bill
+
+bill:		!login bill 23456
+>			verify("success")
+
+bill:		!buy -100
+>			verify("Error: Amount must be positive.")
+
+bill:		!buy 0
+>			verify("Error: Amount must be positive.")
+
+bill:		!credits
+>			verify("500")
+
+bill:		!buy 3
+>			verify("503")
+
+controller: !exit
+bill:		!exit

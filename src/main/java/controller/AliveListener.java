@@ -106,12 +106,12 @@ public class AliveListener extends TerminableThread {
 		} else {
 			node.setLastAliveMessage(lastAliveTimestamp);
 			
-			if(operatorsChanged(node.getAllowedOperators(), splitMessage[2])) {
+			String newOperators = splitMessage[2];
+			if(operatorsChanged(node.getAllowedOperators(), newOperators)) {
 				synchronized(node) {
 					synchronized(activeNodes) {
-						node.setAllowedOperators(splitMessage[2]);
-						removeFromActiveNodes(node);
-						addToActiveNodes(node);
+						updateActiveNodes(node, newOperators);
+						node.setAllowedOperators(newOperators);
 					}
 				}
 			}
@@ -127,12 +127,6 @@ public class AliveListener extends TerminableThread {
 		
 		return !Arrays.equals(oldArray, newArray);
 	}
-	
-	private void removeFromActiveNodes(Node node) {
-		for(ConcurrentSkipListSet<Node> singleOperatorList : activeNodes.values()) {
-			singleOperatorList.remove(node);
-		}
-	}
 
 	private void addToNodesAndSetActive(String uniqueNodeID) {
 		Node node = new Node(packet.getAddress(),
@@ -145,15 +139,36 @@ public class AliveListener extends TerminableThread {
 	}
 
 	private void addToActiveNodes(Node node) {
-		for (char operator : node.getAllowedOperators().toCharArray()) {
+		for (Character operator : node.getAllowedOperators().toCharArray()) {
 			if (activeNodes.containsKey(operator)) {
-				activeNodes.get(operator).add(node);
+				ConcurrentSkipListSet<Node> set = activeNodes.get(operator);
+				synchronized(set) {
+					set.add(node);
+				}
 			} else {
-				activeNodes.put(operator, new ConcurrentSkipListSet<Node>());
-				activeNodes.get(operator).add(node);
+				ConcurrentSkipListSet<Node> set = new ConcurrentSkipListSet<Node>();
+				synchronized(set) {
+					activeNodes.put(operator, set);
+					set.add(node);
+				}
 			}
 		}
 
+	}
+
+	private void updateActiveNodes(Node node, String newOperators) {
+		for(char operator : node.getAllowedOperators().toCharArray()) {
+			if(newOperators.indexOf(operator) == -1)
+				synchronized(activeNodes.get(operator)) {
+					activeNodes.get(operator).remove(node);
+				}
+		}
+		for (char operator : newOperators.toCharArray()) {
+			if(node.getAllowedOperators().indexOf(operator) == -1)
+				synchronized(activeNodes.get(operator)) {
+					activeNodes.get(operator).add(node);
+				}
+		}
 	}
 
 	private boolean isInteger(String s) {

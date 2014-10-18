@@ -25,13 +25,15 @@ node1:		!exit
 # Waste some time, so that node1 can timeout. If this test fails often, remove the following verify
 *	Node		node2
 *	Node		node4
-*	Client		fake1
-*	Client		fake2
-*	Client		fake3
-*	Client		fake4
+*	Client		waste
+*	Client		some
+*	Client		more
+*	Client		time
 controller:		!nodes
 >			verify(".*127.0.0.1.*13362.*offline.*", T(test.util.Flag).REGEX)
 
 controller: !exit
 bill:		!exit
+node2:		!exit
 node3:		!exit
+node4:		!exit

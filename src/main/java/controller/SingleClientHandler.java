@@ -119,12 +119,13 @@ public class SingleClientHandler implements Runnable {
 	private String handleBuy(ClientRequest request) {
 		if (!isLoggedIn())
 			return "You need to log in first.";
-		else {
-			currentUser.setCredits(currentUser.getCredits()
-					+ request.getBuyAmount());
-			return String.format("You now have %d credits.",
-					currentUser.getCredits());
-		}
+		if(request.getBuyAmount() <= 0)
+			return "Error: Amount must be positive.";
+		
+		currentUser.setCredits(currentUser.getCredits()
+				+ request.getBuyAmount());
+		return String.format("You now have %d credits.",
+				currentUser.getCredits());
 	}
 
 	private String handleList() {
@@ -145,10 +146,12 @@ public class SingleClientHandler implements Runnable {
 	}
 
 	private String handleCompute(ClientRequest request) throws IOException {
+		if (!isLoggedIn())
+			return "You need to log in first.";
 		if (!currentUser.hasEnoughCredits(request))
 			return "Not enough credits!";
 		if (!canBeComputed(request))
-			return "Can't compute that sort of arithmetic expression! (No nodes for all the operators available)";
+			return "Error: Operators unsupported!";
 
 		int[] operands = request.getOperands();
 		char[] operators = request.getOperators();
@@ -202,7 +205,7 @@ public class SingleClientHandler implements Runnable {
 							default:
 								break; // Just skip this node for now and try another one
 							}
-						} catch (SocketTimeoutException e) {
+						} catch (SocketException e) {
 							// Just skip this node for now and try another one
 						} finally {
 							if(currentComputationChannel != null)
@@ -212,7 +215,7 @@ public class SingleClientHandler implements Runnable {
 					}
 				}
 				if(!foundAvailableNode)
-					return String.format("Can't compute that sort of arithmetic expression! (All nodes for the '%c' operator suddenly became unavailable)", nextOperator);
+					return "Error: Nodes crashed!";
 			}
 
 			deductCredits(totalOperatorCount);
@@ -245,20 +248,29 @@ public class SingleClientHandler implements Runnable {
 	private void updateUsageStatistics(Node node, ComputationResult result) {
 		int usageCost = calculateUsageCost(result);
 		synchronized(node) {
-			node.setUsage(node.getUsage() + usageCost);
-		}
-		synchronized(activeNodes) {
-			for(ConcurrentSkipListSet<Node> nodeList : activeNodes.values())
-				if(nodeList.contains(node)) {
-					nodeList.remove(node);
-					nodeList.add(node);
+			synchronized(activeNodes) {
+				node.setUsage(node.getUsage() + usageCost);
+			
+				for(ConcurrentSkipListSet<Node> set : activeNodes.values())
+					synchronized(set) {
+						if(set.contains(node)) {
+							
+							set.remove(node);
+							set.add(node);
+						}
+					}
 				}
 		}
 
 	}
 
 	private int calculateUsageCost(ComputationResult result) {
-		return ((int)(Math.log10(result.getNumber())+1)) * FixedParameters.USAGE_COST_PER_RESULT_DIGIT;
+		int abs = Math.abs(result.getNumber());
+		if(abs == 0)
+			abs++;
+		
+		int digits = (int)(Math.log10(abs)+1);
+		return digits * FixedParameters.USAGE_COST_PER_RESULT_DIGIT;
 	}
 
 	private void deductCredits(int operatorCount) {

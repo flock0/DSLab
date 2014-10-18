@@ -35,7 +35,7 @@ public class User {
 		return password.equals(passwordToCheck);
 	}
 	public boolean hasEnoughCredits(ClientRequest request) {
-		return credits > request.getOperators().length * FixedParameters.CREDIT_COST_PER_OPERATOR;
+		return credits >= request.getOperators().length * FixedParameters.CREDIT_COST_PER_OPERATOR;
 	}
 	@Override
 	public String toString() {

@@ -1,0 +1,27 @@
+*	CloudController	controller
+*	Client			alice
+*	Node			node1
+*	Node			node4
+
+alice:		!login alice 12345
+>			verify("success")
+
+alice:		!compute 50 - 10
+>			verify("40")
+
+*	Client			waste
+*	Client			time
+
+alice:		!compute 555 + 500
+>			verify("1055")
+
+controller:	!nodes
+>			verify(".*Usage: 100.*", T(test.util.Flag).REGEX)
+
+controller:	!nodes
+>			verify(".*Usage: 200.*", T(test.util.Flag).REGEX)
+
+controller: !exit
+alice:		!exit
+node1:		!exit
+node4:		!exit

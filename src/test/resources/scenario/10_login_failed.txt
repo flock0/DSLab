@@ -1,0 +1,14 @@
+*	CloudController	controller
+*	Client			bill
+
+bill:		!login bill wrongpassword
+>			verify("Wrong username or password.")
+
+bill:		!login wrongusername 23456
+>			verify("Wrong username or password.")
+
+bill:		!login bill 23456
+>			verify("success")
+
+controller: !exit
+bill:		!exit

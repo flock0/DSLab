@@ -1,0 +1,21 @@
+*	CloudController	controller
+*	Client			alice
+*	Node			node3
+*	Node			node2
+
+alice:		!login alice 12345
+>			verify("success")
+
+alice:		!compute 6 * 3 * 2 * 1 / 0
+>			verify("Error: division by 0")
+
+alice:		!compute 6 * 3 * 2 * 1 / 0 * 1
+>			verify("Error: division by 0")
+
+alice:		!credits
+>			verify("100")
+
+controller: !exit
+alice:		!exit
+node3:		!exit
+node2:		!exit

@@ -36,6 +36,8 @@ public class NodePurgeTask extends TimerTask {
 
 	private void removeFromActiveNodes(Node node) {
 		for(ConcurrentSkipListSet<Node> set : activeNodes.values())
-			set.remove(node);
+			synchronized(set) {
+				set.remove(node);
+			}
 	}
 }

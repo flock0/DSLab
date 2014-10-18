@@ -1,0 +1,21 @@
+*	CloudController	controller
+*	Client			bill
+*	Node			node1
+*	Node			node2
+
+bill:		!login bill 23456
+>			verify("success")
+
+bill:		!compute 12 * 12
+>			verify("Error: Operators unsupported!")
+
+*	Node			node3
+
+bill:		!compute 12 * 12
+>			verify("144")
+
+controller: !exit
+bill:		!exit
+node1:		!exit
+node2:		!exit
+node3:		!exit
