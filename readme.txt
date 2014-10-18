@@ -21,3 +21,6 @@ Danach kann der ThreadPool heruntergefahren werden
 
 
 analog beim Node mit dessen ComputationRequestListenern
+
+------------------------------------------
+nextNodeToTry wird nicht synchronisiert. D.h. Node-Findung nicht synchron. Es kann sein, dass usage nicht immer perfekt ist. Auf Dauer ist es jedoch perfekt.
