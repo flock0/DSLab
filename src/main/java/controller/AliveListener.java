@@ -24,7 +24,7 @@ public class AliveListener extends TerminableThread {
 
 	public AliveListener(
 			ConcurrentHashMap<Character, ConcurrentSkipListSet<Node>> activeNodes,
-			ConcurrentHashMap<String, Node> allNodes, Config config) {
+			ConcurrentHashMap<String, Node> allNodes, Config config) throws SocketException {
 		this.activeNodes = activeNodes;
 		this.allNodes = allNodes;
 		this.config = config;
@@ -33,12 +33,8 @@ public class AliveListener extends TerminableThread {
 		openUDPSocket();
 	}
 
-	private void openUDPSocket() {
-		try {
+	private void openUDPSocket() throws SocketException {
 			datagramSocket = new DatagramSocket(config.getInt("udp.port"));
-		} catch (SocketException e) {
-			System.out.println("Couldn't create UDP socket: " + e.getMessage());
-		}
 	}
 
 	@Override

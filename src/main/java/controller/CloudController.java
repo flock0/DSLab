@@ -5,6 +5,7 @@ import util.Config;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.net.SocketException;
 import java.util.Timer;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -18,13 +19,14 @@ public class CloudController implements ICloudControllerCli, Runnable {
 	private Config config;
 	private InputStream userRequestStream;
 	private PrintStream userResponseStream;
-	private Timer nodePurgeTimer;
-	private Shell shell;
+	private Timer nodePurgeTimer = null;
+	private Shell shell = null;
 	private ConcurrentHashMap<Character, ConcurrentSkipListSet<Node>> activeNodes;
 	private ConcurrentHashMap<String, Node> allNodes;
 	private ConcurrentHashMap<String, User> users;
-	private AliveListener aliveListener;
-	private ClientListener clientListener;
+	private AliveListener aliveListener = null;
+	private ClientListener clientListener = null;
+	private boolean successfullyInitialized;
 	
 
 	/**
@@ -44,13 +46,18 @@ public class CloudController implements ICloudControllerCli, Runnable {
 		this.userRequestStream = userRequestStream;
 		this.userResponseStream = userResponseStream;
 
-		
-		nodePurgeTimer = new Timer();
-		Node.TimeoutPeriod = config.getInt("node.timeout");
-		loadUsers();
-		initializeNodeMaps();
-		initializeListeners();
-		initializeShell();
+		try {
+			
+			nodePurgeTimer = new Timer();
+			Node.TimeoutPeriod = config.getInt("node.timeout");
+			loadUsers();
+			initializeNodeMaps();
+			initializeListeners();
+			initializeShell();
+			successfullyInitialized = true;
+		} catch (IOException e) {
+			System.out.println("Couldn't create socket: " + e.getMessage());
+		}
 	}
 
 	private void initializeNodeMaps() {
@@ -58,7 +65,7 @@ public class CloudController implements ICloudControllerCli, Runnable {
 		allNodes = new ConcurrentHashMap<String, Node>();
 	}
 
-	private void initializeListeners() {
+	private void initializeListeners() throws IOException {
 		aliveListener = new AliveListener(activeNodes, allNodes, config);
 		clientListener = new ClientListener(users, activeNodes, config);
 	}
@@ -86,11 +93,13 @@ public class CloudController implements ICloudControllerCli, Runnable {
 
 	@Override
 	public void run() {
-		
-		startNodePurgeTimer();
-		startListeners();
-		startShell();
-		
+		if(successfullyInitialized) {
+			startNodePurgeTimer();
+			startListeners();
+			startShell();
+		} else {
+			shutdown();
+		}
 	}
 
 	private void startNodePurgeTimer() {
@@ -140,11 +149,19 @@ public class CloudController implements ICloudControllerCli, Runnable {
 	@Override
 	@Command
 	public String exit() throws IOException {
-		aliveListener.shutdown();
-		clientListener.shutdown();
-		nodePurgeTimer.cancel();
-		shell.close();
+		shutdown();
 		return "Shut down completed! Bye ..";
+	}
+
+	private void shutdown() {
+		if(aliveListener != null)
+			aliveListener.shutdown();
+		if(clientListener != null)
+			clientListener.shutdown();
+		if(nodePurgeTimer != null)
+			nodePurgeTimer.cancel();
+		if(shell != null)
+			shell.close();
 	}
 
 	/**

@@ -26,7 +26,7 @@ public class ClientListener extends TerminableThread {
 	private ConcurrentHashMap<String, User> users;
 	private ChannelSet openChannels;
 
-	public ClientListener(ConcurrentHashMap<String, User> users, ConcurrentHashMap<Character, ConcurrentSkipListSet<Node>> activeNodes, Config config) {
+	public ClientListener(ConcurrentHashMap<String, User> users, ConcurrentHashMap<Character, ConcurrentSkipListSet<Node>> activeNodes, Config config) throws IOException {
 		this.users = users;
 		this.activeNodes = activeNodes;
 		this.config = config;
@@ -36,12 +36,8 @@ public class ClientListener extends TerminableThread {
 		openChannels = new ChannelSet();
 	}
 
-	private void openServerSocket() {
-		try {
-			serverSocket = new ServerSocket(config.getInt("tcp.port"));
-		} catch (IOException e) {
-			System.out.println("Couldn't create ServerSocket: " + e.getMessage());
-		}
+	private void openServerSocket() throws IOException {
+		serverSocket = new ServerSocket(config.getInt("tcp.port"));
 	}
 
 	private void createThreadPool() {

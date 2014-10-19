@@ -28,20 +28,15 @@ public class ComputationRequestListener extends TerminableThread {
 	private ExecutorService threadPool;
 	private ChannelSet openChannels;
 
-	public ComputationRequestListener(Config config) {
+	public ComputationRequestListener(Config config) throws IOException {
 		this.config = config;
 		openServerSocket();
 		createThreadPool();
 		openChannels = new ChannelSet();
 	}
 
-	private void openServerSocket() {
-		try {
-			serverSocket = new ServerSocket(config.getInt("tcp.port"));
-		} catch (IOException e) {
-			System.out.println("Couldn't create ServerSocket: "
-					+ e.getMessage());
-		}
+	private void openServerSocket() throws IOException {
+		serverSocket = new ServerSocket(config.getInt("tcp.port"));
 	}
 
 	private void createThreadPool() {

@@ -26,7 +26,7 @@ public class Node implements INodeCli, Runnable {
 	private Shell shell;
 	private Timer aliveTimer;
 	private TerminableThread listener;
-	
+	private boolean successfullyInitialized = false;
 	/**
 	 * @param componentName
 	 *            the name of the component - represented in the prompt
@@ -44,10 +44,18 @@ public class Node implements INodeCli, Runnable {
 		this.userRequestStream = userRequestStream;
 		this.userResponseStream = userResponseStream;
 		
-		aliveTimer = new Timer();
+		try {
+			initializeListener();
+			aliveTimer = new Timer();
+			initializeShell();
+			successfullyInitialized = true;
+		} catch (IOException e) {
+			System.out.println("Couldn't create ServerSocket: " + e.getMessage());
+		}
+	}
+
+	private void initializeListener() throws IOException {
 		listener = new ComputationRequestListener(config);
-		initializeShell();
-		
 	}
 
 	private void initializeShell() {
@@ -57,9 +65,11 @@ public class Node implements INodeCli, Runnable {
 
 	@Override
 	public void run() {
-		startAliveTimer();
-		startRequestListener();
-		startShell();
+		if(successfullyInitialized) {
+			startAliveTimer();
+			startRequestListener();
+			startShell();
+		}
 	}
 
 	private void startAliveTimer() {
