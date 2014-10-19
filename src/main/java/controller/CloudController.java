@@ -21,12 +21,12 @@ public class CloudController implements ICloudControllerCli, Runnable {
 	private PrintStream userResponseStream;
 	private Timer nodePurgeTimer = null;
 	private Shell shell = null;
-	private ConcurrentHashMap<Character, ConcurrentSkipListSet<Node>> activeNodes;
-	private ConcurrentHashMap<String, Node> allNodes;
-	private ConcurrentHashMap<String, User> users;
+	private ConcurrentHashMap<Character, ConcurrentSkipListSet<Node>> activeNodes = null; // All nodes currently online. Key: Operator, Value: Sorted set of nodes that can compute that operator
+	private ConcurrentHashMap<String, Node> allNodes = null; // All nodes observed by the controller (online and offline). Key: "<ip_address>:<port>"
+	private ConcurrentHashMap<String, User> users = null;
 	private AliveListener aliveListener = null;
 	private ClientListener clientListener = null;
-	private boolean successfullyInitialized;
+	private boolean successfullyInitialized = false;
 	
 
 	/**
@@ -47,7 +47,6 @@ public class CloudController implements ICloudControllerCli, Runnable {
 		this.userResponseStream = userResponseStream;
 
 		try {
-			
 			nodePurgeTimer = new Timer();
 			Node.TimeoutPeriod = config.getInt("node.timeout");
 			loadUsers();
@@ -57,6 +56,20 @@ public class CloudController implements ICloudControllerCli, Runnable {
 			successfullyInitialized = true;
 		} catch (IOException e) {
 			System.out.println("Couldn't create socket: " + e.getMessage());
+		}
+	}
+
+	private void loadUsers() {
+		users = new ConcurrentHashMap<String, User>();
+		Config userConfig = new Config("user");
+		
+		for(String key : userConfig.listKeys()) {
+			// The first part of the property keys is always the username
+			String username = key.split("\\.")[0];
+			if(!users.containsKey(username)) {
+				User user = new User(username, userConfig);
+				users.put(username, user);
+			}
 		}
 	}
 
@@ -70,25 +83,9 @@ public class CloudController implements ICloudControllerCli, Runnable {
 		clientListener = new ClientListener(users, activeNodes, config);
 	}
 	
-	private void loadUsers() {
-		users = new ConcurrentHashMap<>();
-		Config userConfig = new Config("user");
-		
-		for(String key : userConfig.listKeys()) {
-			
-			String username = key.split("\\.")[0];
-			if(!users.containsKey(username)) {
-				User user = new User(username, userConfig);
-				users.put(username, user);
-			}
-		}
-		
-	}
-
 	private void initializeShell() {
 		shell = new Shell(componentName, userRequestStream, userResponseStream);
 		shell.register(this);
-		
 	}
 
 	@Override

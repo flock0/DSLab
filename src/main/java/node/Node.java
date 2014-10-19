@@ -15,7 +15,6 @@ import cli.Shell;
 
 /**
  * Initializes and starts a computation node
- *
  */
 public class Node implements INodeCli, Runnable {
 
@@ -23,9 +22,9 @@ public class Node implements INodeCli, Runnable {
 	private Config config;
 	private InputStream userRequestStream;
 	private PrintStream userResponseStream;
-	private Shell shell;
-	private Timer aliveTimer;
-	private TerminableThread listener;
+	private Shell shell = null;
+	private Timer aliveTimer = null;
+	private TerminableThread listener = null;
 	private boolean successfullyInitialized = false;
 	/**
 	 * @param componentName
@@ -88,10 +87,18 @@ public class Node implements INodeCli, Runnable {
 	@Override
 	@Command
 	public String exit() throws IOException {
-		listener.shutdown();
-		aliveTimer.cancel();
-		shell.close();
+		shutdown();
 		return "Shut down completed! Bye ..";
+	}
+
+	private void shutdown() {
+		if(listener != null)
+			listener.shutdown();
+		if(aliveTimer != null)
+			aliveTimer.cancel();
+		if(shell != null)
+			shell.close();
+		
 	}
 
 	@Override

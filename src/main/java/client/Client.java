@@ -20,7 +20,7 @@ public class Client implements IClientCli, Runnable {
 	private PrintStream userResponseStream;
 	private Channel channel = null;
 	private Shell shell;
-	private boolean initializedSuccessfully = false;
+	private boolean successfullyInitialized = false;
 
 	/**
 	 * @param componentName
@@ -40,10 +40,9 @@ public class Client implements IClientCli, Runnable {
 		this.userResponseStream = userResponseStream;
 
 		try {
-			
 			initializeSocket();
 			initializeShell();
-			initializedSuccessfully = true;
+			successfullyInitialized = true;
 		} catch (UnknownHostException e) {
 			System.out.println("Couldn't resolve IP address: " + e.getMessage());
 		} catch (IOException e) {
@@ -51,18 +50,18 @@ public class Client implements IClientCli, Runnable {
 		}
 	}
 
+	private void initializeSocket() throws UnknownHostException, IOException {
+		channel = new TcpChannel(new Socket(config.getString("controller.host"), config.getInt("controller.tcp.port")));
+	}
+
 	private void initializeShell() {
 		shell = new Shell(componentName, userRequestStream, userResponseStream);
 		shell.register(this);
 	}
 
-	private void initializeSocket() throws UnknownHostException, IOException {
-		channel = new TcpChannel(new Socket(config.getString("controller.host"), config.getInt("controller.tcp.port")));
-	}
-
 	@Override
 	public void run() {
-		if(initializedSuccessfully) {
+		if(successfullyInitialized) {
 			System.out.println(componentName + " up and waiting for commands!");
 			shell.run();
 		}

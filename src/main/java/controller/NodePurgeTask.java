@@ -6,11 +6,14 @@ import java.util.concurrent.ConcurrentSkipListSet;
 
 import util.Config;
 
+/**
+ * Routinely purge nodes that appear to be offline
+ */
 public class NodePurgeTask extends TimerTask {
 
 	private Config config;
 	private ConcurrentHashMap<Character, ConcurrentSkipListSet<Node>> activeNodes;
-	private long timeoutPeriod;
+	private final long timeoutPeriod;
 
 	public NodePurgeTask(ConcurrentHashMap<Character, ConcurrentSkipListSet<Node>> activeNodes, Config config) {
 		this.config = config;

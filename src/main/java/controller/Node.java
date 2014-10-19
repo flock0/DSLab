@@ -3,6 +3,9 @@ package controller;
 import java.net.InetAddress;
 import java.util.UUID;
 
+/**
+ * A node that can be used for computation
+ */
 public class Node implements Comparable<Node>{
 	
 	public static long TimeoutPeriod;
@@ -54,21 +57,17 @@ public class Node implements Comparable<Node>{
 		return System.currentTimeMillis() - lastAliveTimestamp < TimeoutPeriod;
 	}
 	
+	private String isOnlineString() {
+		if(isOnline())
+			return "online";
+		else
+			return "offline";
+	}
 	public String getNetworkID() {
 		return createNetworkID(address, port);
 	}
 	public static String createNetworkID(InetAddress address, int port) {
 		return String.format("%s:%d", address.getHostAddress(), port);
-	}
-	@Override
-	public int compareTo(Node other) {
-		if(getUsage() < other.getUsage())
-			return -1;
-		else if(getUsage() > other.getUsage())
-			return 1;
-		else {
-			return uuid.compareTo(other.getUUID()); // Avoid returning 0 by comparing the random UUIDs
-		}
 	}
 	@Override
 	public String toString() {
@@ -84,11 +83,14 @@ public class Node implements Comparable<Node>{
 		builder.append('\n');
 		return builder.toString();
 	}
-	
-	private String isOnlineString() {
-		if(isOnline())
-			return "online";
-		else
-			return "offline";
+	@Override
+	public int compareTo(Node other) {
+		if(getUsage() < other.getUsage())
+			return -1;
+		else if(getUsage() > other.getUsage())
+			return 1;
+		else {
+			return uuid.compareTo(other.getUUID()); // Avoid returning 0 by comparing the random UUIDs
+		}
 	}
 }

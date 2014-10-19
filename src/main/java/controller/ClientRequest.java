@@ -1,5 +1,8 @@
 package controller;
 
+/**
+ * Contains a single client command / request
+ */
 public class ClientRequest {
 	private RequestType type;
 	private String username;

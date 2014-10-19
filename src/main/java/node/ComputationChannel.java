@@ -5,6 +5,9 @@ import java.io.IOException;
 import util.Channel;
 import util.ChannelDecorator;
 
+/**
+ * Handles communication between the controller and the node
+ */
 public class ComputationChannel extends ChannelDecorator {
 
 	public ComputationChannel(Channel underlying) {

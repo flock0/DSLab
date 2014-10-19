@@ -3,6 +3,9 @@ package controller;
 import util.Config;
 import util.FixedParameters;
 
+/**
+ * Contains a single user loaded from the config files
+ */
 public class User {
 	
 	private String username;
@@ -16,15 +19,26 @@ public class User {
 		password = config.getString(username + ".password");
 		concurrentOnlineCounter = 0;
 	}
+	
 	public int getCredits() {
 		return credits;
 	}
 	public void setCredits(int credits) {
 		this.credits = credits;
 	}
+	public String getUsername() {
+		return username;
+	}
+
 	public boolean isOnline() {
 		return concurrentOnlineCounter > 0;
 	}
+	private String isOnlineAsString() {
+		if(isOnline())
+			return "online";
+		return "offline";
+	}
+
 	public void increaseOnlineCounter() {
 		concurrentOnlineCounter++;
 	}
@@ -32,31 +46,21 @@ public class User {
 		if(concurrentOnlineCounter > 0)
 			concurrentOnlineCounter--;
 	}
-	public String getUsername() {
-		return username;
-	}
 	public boolean isCorrectPassword(String passwordToCheck) {
 		return password.equals(passwordToCheck);
 	}
 	public boolean hasEnoughCredits(ClientRequest request) {
-		return credits >= request.getOperators().length * FixedParameters.CREDIT_COST_PER_OPERATOR;
+		return credits >= (request.getOperators().length * FixedParameters.CREDIT_COST_PER_OPERATOR);
 	}
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
 		builder.append(username);
 		builder.append(" ");
-		builder.append(isOnlineString());
+		builder.append(isOnlineAsString());
 		builder.append(" Credits: ");
 		builder.append(credits);
 		builder.append('\n');
 		return builder.toString();
-	}
-	
-	private String isOnlineString() {
-		if(isOnline())
-			return "online";
-		else
-			return "offline";
 	}
 }

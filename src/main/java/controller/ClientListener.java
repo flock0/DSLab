@@ -17,6 +17,10 @@ import util.ChannelSet;
 import util.TcpChannel;
 import util.TerminableThread;
 
+/**
+ * Listens for client connections at the TCP port
+ * and delegates them to the handlers
+ */
 public class ClientListener extends TerminableThread {
 
 	private ServerSocket serverSocket;
@@ -24,7 +28,7 @@ public class ClientListener extends TerminableThread {
 	private ExecutorService threadPool;
 	private ConcurrentHashMap<Character, ConcurrentSkipListSet<Node>> activeNodes;
 	private ConcurrentHashMap<String, User> users;
-	private ChannelSet openChannels;
+	private ChannelSet openChannels; // Keeps track of all open channels for clients or nodes. Used for shutdown 
 
 	public ClientListener(ConcurrentHashMap<String, User> users, ConcurrentHashMap<Character, ConcurrentSkipListSet<Node>> activeNodes, Config config) throws IOException {
 		this.users = users;
@@ -52,8 +56,7 @@ public class ClientListener extends TerminableThread {
 					Channel nextRequest = new TcpChannel(serverSocket.accept());
 					openChannels.add(nextRequest);
 					threadPool.execute(new SingleClientHandler(nextRequest, activeNodes, users, openChannels, config));					
-					openChannels.cleanUp();
-
+					openChannels.cleanUp(); // Make a semi-regular clean up
 				}
 			} catch (SocketException e) {
 				System.out.println("ClientSocket shutdown: " + e.getMessage());
@@ -75,7 +78,7 @@ public class ClientListener extends TerminableThread {
 
 	/**
 	 * Shuts down the ExecutorService in two phases, first by calling shutdown
-	 * to reject incoming tasks, and then calling shutdownNow, if necessary, to
+	 * to reject incoming tasks and closing all channels, and then calling shutdownNow, if necessary, to
 	 * cancel any lingering tasks.
 	 * 
 	 * Taken from http://docs.oracle.com/javase/7/docs/api/java/util/concurrent/

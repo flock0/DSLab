@@ -13,14 +13,14 @@ import util.TerminableThread;
 
 public class AliveListener extends TerminableThread {
 
-	private Config config;
-	private ConcurrentHashMap<Character, ConcurrentSkipListSet<Node>> activeNodes;
-	private ConcurrentHashMap<String, Node> allNodes;
-	private DatagramSocket datagramSocket = null;
+	private final Config config;
+	private final ConcurrentHashMap<Character, ConcurrentSkipListSet<Node>> activeNodes;
+	private final ConcurrentHashMap<String, Node> allNodes;
+	private DatagramSocket datagramSocket = null;;
 	private DatagramPacket packet = null;
 	private long lastAliveTimestamp;
 	private String[] splitMessage = null;
-	private long timeoutPeriod;
+	private final long timeoutPeriod;
 
 	public AliveListener(
 			ConcurrentHashMap<Character, ConcurrentSkipListSet<Node>> activeNodes,
@@ -70,19 +70,11 @@ public class AliveListener extends TerminableThread {
 	}
 
 	private boolean messageIsValid() {
-		return splitMessage.length == 3 && splitMessage[0].equals("!alive")
-				&& isInteger(splitMessage[1]) && !splitMessage[2].isEmpty();
-	}
-
-	private void updateActiveNodes() {
-		String uniqueNodeID = Node.createNetworkID(packet.getAddress(),
-				Integer.parseInt(splitMessage[1]));
-
-		if (haveSeenNode(uniqueNodeID)) {
-			 refreshNode(uniqueNodeID);
-		} else {
-			addToNodesAndSetActive(uniqueNodeID);
-		}
+		// "!alive <portnumber> <allowed_operators>"
+		return splitMessage.length == 3 
+				&& splitMessage[0].equals("!alive")
+				&& isInteger(splitMessage[1]) 
+				&& !splitMessage[2].isEmpty();
 	}
 
 	private boolean haveSeenNode(String uniqueNodeID) {
@@ -98,7 +90,6 @@ public class AliveListener extends TerminableThread {
 			synchronized(activeNodes) {
 				addToActiveNodes(node);
 			}
-			
 		} else {
 			node.setLastAliveMessage(lastAliveTimestamp);
 			
@@ -115,13 +106,23 @@ public class AliveListener extends TerminableThread {
 		
 	}
 
-	private boolean operatorsChanged(String oldOperators, String newOperators) {
+	private static boolean operatorsChanged(String oldOperators, String newOperators) {
 		char[] oldArray = oldOperators.toCharArray();
 		char[] newArray = newOperators.toCharArray();
 		Arrays.sort(oldArray);
 		Arrays.sort(newArray);
 		
 		return !Arrays.equals(oldArray, newArray);
+	}
+
+	private void updateActiveNodes() {
+		String uniqueNodeID = Node.createNetworkID(packet.getAddress(),
+				Integer.parseInt(splitMessage[1]));
+	
+		if (haveSeenNode(uniqueNodeID))
+			refreshNode(uniqueNodeID);
+		else
+			addToNodesAndSetActive(uniqueNodeID);
 	}
 
 	private void addToNodesAndSetActive(String uniqueNodeID) {
@@ -136,6 +137,7 @@ public class AliveListener extends TerminableThread {
 
 	private void addToActiveNodes(Node node) {
 		for (Character operator : node.getAllowedOperators().toCharArray()) {
+			// If a respective set already exists, add it. Otherwise create a new list
 			if (activeNodes.containsKey(operator)) {
 				ConcurrentSkipListSet<Node> set = activeNodes.get(operator);
 				synchronized(set) {
@@ -153,12 +155,14 @@ public class AliveListener extends TerminableThread {
 	}
 
 	private void updateActiveNodes(Node node, String newOperators) {
+		// Remove node from unavailable operators lists
 		for(char operator : node.getAllowedOperators().toCharArray()) {
 			if(newOperators.indexOf(operator) == -1)
 				synchronized(activeNodes.get(operator)) {
 					activeNodes.get(operator).remove(node);
 				}
 		}
+		// Add node to now available operators lists
 		for (char operator : newOperators.toCharArray()) {
 			if(node.getAllowedOperators().indexOf(operator) == -1)
 				synchronized(activeNodes.get(operator)) {

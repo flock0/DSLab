@@ -16,10 +16,17 @@ import java.util.concurrent.ConcurrentSkipListSet;
 public class ChannelSet {
 	private Set<Channel> set = Collections.newSetFromMap(new ConcurrentHashMap<Channel, Boolean>());
 	
+	/**
+	 * Adds a channel to the set
+	 * @param s The channel to add
+	 */
 	public void add(Channel s) {
 		set.add(s);
 	}
 	
+	/**
+	 * Removes channels which have been closed from the set
+	 */
 	public void cleanUp() {
 		Set<Channel> remove = new HashSet<>();
 		
@@ -31,6 +38,9 @@ public class ChannelSet {
 			set.remove(r);
 	}
 	
+	/**
+	 * Closes all of the channels in the set
+	 */
 	public void closeAll() {
 		cleanUp();
 		for(Channel s : set) {

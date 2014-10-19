@@ -12,7 +12,6 @@ import util.Config;
 
 /**
  * Handles the task of sending a periodical alive message
- *
  */
 public class AliveTask extends TimerTask {
 

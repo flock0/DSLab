@@ -51,7 +51,7 @@ public class ComputationRequestListener extends TerminableThread {
 					Channel nextRequest = new TcpChannel(serverSocket.accept());
 					openChannels.add(nextRequest);
 					threadPool.execute(new SingleComputationHandler(nextRequest, config));
-					openChannels.cleanUp();
+					openChannels.cleanUp(); // Make a semi-regular clean up
 
 				}
 			} catch (SocketException e) {
@@ -66,7 +66,7 @@ public class ComputationRequestListener extends TerminableThread {
 	public void shutdown() {
 		try {
 			serverSocket.close();
-			shutdownPoolAndAwaitTermination();
+			shutdownSocketsAndPool();
 
 		} catch (IOException e) {
 			// Nothing we can do about that
@@ -75,13 +75,13 @@ public class ComputationRequestListener extends TerminableThread {
 
 	/**
 	 * Shuts down the ExecutorService in two phases, first by calling shutdown
-	 * to reject incoming tasks, and then calling shutdownNow, if necessary, to
+	 * to reject incoming tasks and closing all channels, and then calling shutdownNow, if necessary, to
 	 * cancel any lingering tasks.
 	 * 
 	 * Taken from http://docs.oracle.com/javase/7/docs/api/java/util/concurrent/
 	 * ExecutorService.html
 	 */
-	private void shutdownPoolAndAwaitTermination() {
+	private void shutdownSocketsAndPool() {
 		threadPool.shutdown(); // Disable new tasks from being submitted
 		try {
 			openChannels.closeAll();

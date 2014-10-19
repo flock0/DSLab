@@ -27,7 +27,7 @@ public class SingleClientHandler implements Runnable {
 	private ComputationChannel currentComputationChannel = null;
 	private boolean sessionIsBeingTerminated = false;
 	private ChannelSet openChannels;
-	
+
 	public SingleClientHandler(
 			Channel channel,
 			ConcurrentHashMap<Character, ConcurrentSkipListSet<Node>> activeNodes,
@@ -36,7 +36,7 @@ public class SingleClientHandler implements Runnable {
 		this.activeNodes = activeNodes;
 		this.users = users;
 		this.openChannels = openChannels;
-		
+
 		this.channel = new ClientChannel(channel);
 	}
 
@@ -110,9 +110,7 @@ public class SingleClientHandler implements Runnable {
 	private String handleCredits() {
 		if (!isLoggedIn())
 			return "You need to log in first.";
-		else
-			return String.format("You have %d credits left.",
-					currentUser.getCredits());
+		return String.format("You have %d credits left.", currentUser.getCredits());
 
 	}
 
@@ -121,7 +119,7 @@ public class SingleClientHandler implements Runnable {
 			return "You need to log in first.";
 		if(request.getBuyAmount() <= 0)
 			return "Error: Amount must be positive.";
-		
+
 		currentUser.setCredits(currentUser.getCredits()
 				+ request.getBuyAmount());
 		return String.format("You now have %d credits.",
@@ -131,12 +129,12 @@ public class SingleClientHandler implements Runnable {
 	private String handleList() {
 		if (!isLoggedIn())
 			return "You need to log in first.";
-		else
-			return getAvailableOperators();
+		return getAvailableOperators();
 	}
 
 	private String getAvailableOperators() {
 		StringBuilder builder = new StringBuilder();
+		// Sync'ed, so no inconsistent list can be returned 
 		synchronized(activeNodes) {
 			for (Character operator : activeNodes.keySet())
 				if (!activeNodes.get(operator).isEmpty())
@@ -146,6 +144,8 @@ public class SingleClientHandler implements Runnable {
 	}
 
 	private String handleCompute(ClientRequest request) throws IOException {
+		
+		//// Prerequisites ////
 		if (!isLoggedIn())
 			return "You need to log in first.";
 		if (!currentUser.hasEnoughCredits(request))
@@ -153,18 +153,21 @@ public class SingleClientHandler implements Runnable {
 		if (!canBeComputed(request))
 			return "Error: Operators unsupported!";
 
+		//// Declarations ////
 		int[] operands = request.getOperands();
 		char[] operators = request.getOperators();
 		final int totalOperatorCount = operators.length;
 		final int totalOperandCount = operands.length;
+		int remainingOperationsCount = totalOperatorCount;
 		int firstOperand = operands[0];
 		int secondOperand;
-		int remainingOperationsCount = totalOperatorCount;
 		char nextOperator;
+
 
 		try {
 			while (remainingOperationsCount != 0) {
-				
+
+				//// Get Next Request ////
 				nextOperator = operators[totalOperatorCount - remainingOperationsCount]; 
 				secondOperand = operands[totalOperandCount - remainingOperationsCount];
 				NodeRequest computationRequest = new NodeRequest(firstOperand,
@@ -174,9 +177,9 @@ public class SingleClientHandler implements Runnable {
 				boolean foundAvailableNode = false;
 				Iterator<Node> orderedNodesForNextOperator = activeNodes.get(nextOperator).iterator();
 
-
 				while(!foundAvailableNode && orderedNodesForNextOperator.hasNext()) {
 
+					//// Find Node for next request ////
 					Node nextNodeToTry = orderedNodesForNextOperator.next();
 					if(nextNodeToTry.isOnline()) {
 						currentComputationChannel = null;
@@ -189,12 +192,13 @@ public class SingleClientHandler implements Runnable {
 
 							ComputationResult result = currentComputationChannel.getResult();
 
+							//// Check Result ////
 							switch(result.getStatus()) {
 							case OK:
 								foundAvailableNode = true;
 								firstOperand = result.getNumber();
 								remainingOperationsCount--;
-								
+
 								updateUsageStatistics(nextNodeToTry, result);
 								break;
 							case DivisionByZero:
@@ -220,13 +224,12 @@ public class SingleClientHandler implements Runnable {
 
 			deductCredits(totalOperatorCount);
 			return String.valueOf(firstOperand);
-			
+
 		} catch (IOException e) {
 			System.out.println("Error on getting result: " + e.getMessage());
 			if(!sessionIsBeingTerminated)
 				return "Error: An internal error occured";
-			else
-				throw e;
+			throw e;
 		} finally {
 			if(currentComputationChannel != null)
 				currentComputationChannel.close();
@@ -250,16 +253,16 @@ public class SingleClientHandler implements Runnable {
 		synchronized(node) {
 			synchronized(activeNodes) {
 				node.setUsage(node.getUsage() + usageCost);
-			
+
 				for(ConcurrentSkipListSet<Node> set : activeNodes.values())
 					synchronized(set) {
 						if(set.contains(node)) {
-							
+
 							set.remove(node);
 							set.add(node);
 						}
 					}
-				}
+			}
 		}
 
 	}
@@ -268,7 +271,7 @@ public class SingleClientHandler implements Runnable {
 		int abs = Math.abs(result.getNumber());
 		if(abs == 0)
 			abs++;
-		
+
 		int digits = (int)(Math.log10(abs)+1);
 		return digits * FixedParameters.USAGE_COST_PER_RESULT_DIGIT;
 	}

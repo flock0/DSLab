@@ -27,7 +27,7 @@ public class SingleComputationHandler implements Runnable {
 		try {
 			NodeRequest request = channel.getRequest();
 			ComputationResult result;
-			if(request == null) {
+			if(request == null) { // If the channel is closed, the received requests will be null
 				result = new ComputationResult(ResultStatus.Error, 0);
 			} else {
 				ComputationUnit unit = ComputationUnitFactory.createUnit(request, allowedOperators);
