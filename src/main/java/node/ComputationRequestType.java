@@ -1,6 +1,6 @@
-package controller;
+package node;
 
-public enum RequestType {
+public enum ComputationRequestType {
 	Login,
 	Logout,
 	Credits,

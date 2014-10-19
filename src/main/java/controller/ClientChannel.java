@@ -5,6 +5,7 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
 
+import node.ComputationRequestType;
 import util.Channel;
 import util.ChannelDecorator;
 
@@ -39,17 +40,17 @@ public class ClientChannel extends ChannelDecorator {
 		default:
 			underlying.println("Error: Unknown command");
 			ClientRequest request = new ClientRequest();
-			request.setType(RequestType.Invalid);
+			request.setType(ComputationRequestType.Invalid);
 			return request;
 		}
 	}
 
 	private ClientRequest validateLogin(String[] split) {
 		ClientRequest request = new ClientRequest();
-		request.setType(RequestType.Invalid);
+		request.setType(ComputationRequestType.Invalid);
 		
 		if(split.length == 3) {
-			request.setType(RequestType.Login);
+			request.setType(ComputationRequestType.Login);
 			request.setUsername(split[1]);
 			request.setPassword(split[2]);
 		} else {
@@ -61,10 +62,10 @@ public class ClientChannel extends ChannelDecorator {
 
 	private ClientRequest validateLogout(String[] split) {
 		ClientRequest request = new ClientRequest();
-		request.setType(RequestType.Invalid);
+		request.setType(ComputationRequestType.Invalid);
 		
 		if(split.length == 1)
-			request.setType(RequestType.Logout);
+			request.setType(ComputationRequestType.Logout);
 		else
 			underlying.println("Usage: !logout");
 		
@@ -73,10 +74,10 @@ public class ClientChannel extends ChannelDecorator {
 
 	private ClientRequest validateCredits(String[] split) {
 		ClientRequest request = new ClientRequest();
-		request.setType(RequestType.Invalid);
+		request.setType(ComputationRequestType.Invalid);
 		
 		if(split.length == 1)
-			request.setType(RequestType.Credits);
+			request.setType(ComputationRequestType.Credits);
 		else
 			underlying.println("Usage: !credits");
 		
@@ -85,10 +86,10 @@ public class ClientChannel extends ChannelDecorator {
 
 	private ClientRequest validateBuy(String[] split) {
 		ClientRequest request = new ClientRequest();
-		request.setType(RequestType.Invalid);
+		request.setType(ComputationRequestType.Invalid);
 		
 		if(split.length == 2 && isInteger(split[1])) {
-			request.setType(RequestType.Buy);
+			request.setType(ComputationRequestType.Buy);
 			request.setBuyAmount(Integer.parseInt(split[1]));
 		} else {
 			underlying.println("Usage: !buy <amount>");
@@ -99,10 +100,10 @@ public class ClientChannel extends ChannelDecorator {
 
 	private ClientRequest validateList(String[] split) {
 		ClientRequest request = new ClientRequest();
-		request.setType(RequestType.Invalid);
+		request.setType(ComputationRequestType.Invalid);
 		
 		if(split.length == 1)
-			request.setType(RequestType.List);
+			request.setType(ComputationRequestType.List);
 		else
 			underlying.println("Usage: !list");
 		
@@ -111,10 +112,10 @@ public class ClientChannel extends ChannelDecorator {
 
 	private ClientRequest validateCompute(String[] split) {
 		ClientRequest request = new ClientRequest();
-		request.setType(RequestType.Invalid);
+		request.setType(ComputationRequestType.Invalid);
 		
 		if(split.length % 2 == 0) {
-			request.setType(RequestType.Compute);
+			request.setType(ComputationRequestType.Compute);
 			extractArithmeticOperation(request, split);
 		} else {
 			underlying.println("Usage: !compute <operand> <operator> <operand> ...");

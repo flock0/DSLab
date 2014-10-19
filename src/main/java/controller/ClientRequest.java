@@ -1,19 +1,21 @@
 package controller;
 
+import node.ComputationRequestType;
+
 /**
  * Contains a single client command / request
  */
 public class ClientRequest {
-	private RequestType type;
+	private ComputationRequestType type;
 	private String username;
 	private String password;
 	private int buyAmount;
 	private int[] operands;
 	private char[] operators;
-	public RequestType getType() {
+	public ComputationRequestType getType() {
 		return type;
 	}
-	public void setType(RequestType type) {
+	public void setType(ComputationRequestType type) {
 		this.type = type;
 	}
 	public String getUsername() {

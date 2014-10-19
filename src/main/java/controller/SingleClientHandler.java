@@ -8,11 +8,11 @@ import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
-import node.ComputationChannel;
-import node.ComputationResult;
 import node.NodeRequest;
 import util.Channel;
 import util.ChannelSet;
+import util.ComputationChannel;
+import util.ComputationResult;
 import util.Config;
 import util.FixedParameters;
 import util.TcpChannel;

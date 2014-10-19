@@ -1,9 +1,8 @@
-package node;
+package util;
 
 import java.io.IOException;
 
-import util.Channel;
-import util.ChannelDecorator;
+import node.NodeRequest;
 
 /**
  * Handles communication between the controller and the node

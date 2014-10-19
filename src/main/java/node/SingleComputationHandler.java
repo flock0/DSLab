@@ -5,6 +5,8 @@ import java.net.Socket;
 
 import util.Channel;
 import util.ChannelSet;
+import util.ComputationChannel;
+import util.ComputationResult;
 import util.Config;
 import util.ResultStatus;
 

@@ -1,5 +1,6 @@
 package node;
 
+import util.ComputationResult;
 import util.ResultStatus;
 
 public class SubtractComputationUnit implements ComputationUnit {

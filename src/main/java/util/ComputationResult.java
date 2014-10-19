@@ -1,6 +1,5 @@
-package node;
+package util;
 
-import util.ResultStatus;
 
 public class ComputationResult {
 	
