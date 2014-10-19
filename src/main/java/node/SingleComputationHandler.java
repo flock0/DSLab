@@ -8,6 +8,7 @@ import util.ChannelSet;
 import util.ComputationChannel;
 import util.ComputationResult;
 import util.Config;
+import util.NodeLogger;
 import util.ResultStatus;
 
 public class SingleComputationHandler implements Runnable {
@@ -16,6 +17,7 @@ public class SingleComputationHandler implements Runnable {
 	private Config config;
 	private String allowedOperators;
 	private ChannelSet openChannels;
+	private NodeLogger logger;
 
 	public SingleComputationHandler(Channel channel, Config config) {
 		this.channel = new ComputationChannel(channel);
@@ -37,7 +39,7 @@ public class SingleComputationHandler implements Runnable {
 			}
 			
 			channel.sendResult(result);
-			// TODO: Logging
+			NodeLogger.log(request, result);
 			
 		} catch (IOException e) {
 			System.out.println("Error on getting request: " + e.getMessage());

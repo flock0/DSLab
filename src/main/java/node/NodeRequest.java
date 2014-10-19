@@ -34,6 +34,17 @@ public class NodeRequest {
 	public char getOperator() {
 		return operator;
 	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append(operand1);
+		builder.append(" ");
+		builder.append(operator);
+		builder.append(" ");
+		builder.append(operand2);
+		return builder.toString();
+	}
 	
 	
 }

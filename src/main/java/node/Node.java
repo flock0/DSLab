@@ -1,6 +1,7 @@
 package node;
 
 import util.Config;
+import util.NodeLogger;
 import util.TerminableThread;
 
 import java.io.IOException;
@@ -44,6 +45,9 @@ public class Node implements INodeCli, Runnable {
 		this.userResponseStream = userResponseStream;
 		
 		try {
+			NodeLogger.NodeID = componentName;
+			NodeLogger.Directory = config.getString("log.dir");
+			
 			initializeListener();
 			aliveTimer = new Timer();
 			initializeShell();

@@ -20,6 +20,28 @@ public class ComputationResult {
 		return builder.toString();
 	}
 
+	public String toLogString() {
+		StringBuilder builder = new StringBuilder();
+		switch(status) {
+		case OK:
+			builder.append(number);
+			break;
+		case DivisionByZero:
+			builder.append("Error: division by 0");
+			break;
+		case Error:
+			builder.append("Internal error");
+			break;
+		case OperatorNotSupported:
+			builder.append("Error: Operator not supported");
+			break;
+		default:
+			break;
+		}
+		
+		return builder.toString();
+	}
+	
 	public static ComputationResult fromString(String in) {
 		if(in == null)
 			return new ComputationResult(ResultStatus.OperatorNotSupported, 0);
