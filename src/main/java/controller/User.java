@@ -8,13 +8,13 @@ public class User {
 	private String username;
 	private int credits;
 	private String password;
-	private boolean isOnline;
+	private int concurrentOnlineCounter;
 	
 	public User(String username, Config config) {
 		this.username = username;
 		credits = config.getInt(username + ".credits");
 		password = config.getString(username + ".password");
-		isOnline = false;
+		concurrentOnlineCounter = 0;
 	}
 	public int getCredits() {
 		return credits;
@@ -23,10 +23,14 @@ public class User {
 		this.credits = credits;
 	}
 	public boolean isOnline() {
-		return isOnline;
+		return concurrentOnlineCounter > 0;
 	}
-	public void setOnline(boolean isOnline) {
-		this.isOnline = isOnline;
+	public void increaseOnlineCounter() {
+		concurrentOnlineCounter++;
+	}
+	public void decreaseOnlineCounter() {
+		if(concurrentOnlineCounter > 0)
+			concurrentOnlineCounter--;
 	}
 	public String getUsername() {
 		return username;

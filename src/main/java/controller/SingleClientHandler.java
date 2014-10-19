@@ -87,7 +87,7 @@ public class SingleClientHandler implements Runnable {
 			return "Wrong username or password.";
 
 		currentUser = users.get(request.getUsername());
-		currentUser.setOnline(true);
+		currentUser.increaseOnlineCounter();
 		return "Successfully logged in.";
 	}
 
@@ -102,7 +102,7 @@ public class SingleClientHandler implements Runnable {
 	}
 
 	private String handleLogout() {
-		currentUser.setOnline(false);
+		currentUser.decreaseOnlineCounter();
 		currentUser = null;
 		return "Successfully logged out.";
 	}
@@ -280,7 +280,7 @@ public class SingleClientHandler implements Runnable {
 
 	private void logoutAndClose() {
 		if(currentUser != null) {
-			currentUser.setOnline(false);
+			currentUser.decreaseOnlineCounter();
 			currentUser = null;
 		}
 		channel.close();

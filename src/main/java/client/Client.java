@@ -47,7 +47,7 @@ public class Client implements IClientCli, Runnable {
 		} catch (UnknownHostException e) {
 			System.out.println("Couldn't resolve IP address: " + e.getMessage());
 		} catch (IOException e) {
-			System.out.println("Exception on socket creation: " + e.getMessage());
+			System.out.println("Couldn't create socket: " + e.getMessage());
 		}
 	}
 
