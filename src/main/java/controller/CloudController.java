@@ -1,6 +1,7 @@
 package controller;
 
 import util.Config;
+import util.ShellExceptionHandler;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -84,7 +85,14 @@ public class CloudController implements ICloudControllerCli, Runnable {
 	}
 	
 	private void initializeShell() {
-		shell = new Shell(componentName, userRequestStream, userResponseStream);
+		shell = new Shell(componentName, userRequestStream, userResponseStream, new ShellExceptionHandler() {
+			
+			@Override
+			public boolean handle(Throwable throwable, PrintStream out) {
+				// TODO Auto-generated method stub
+				return false;
+			}
+		});
 		shell.register(this);
 	}
 

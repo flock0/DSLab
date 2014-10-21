@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.PortUnreachableException;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.TimerTask;
@@ -60,6 +61,8 @@ public class AliveTask extends TimerTask {
 	public void run() {
 		try {
 			socket.send(alivePacket);
+		} catch (PortUnreachableException e) {
+			// Ignore and keep sending packets
 		} catch (IOException e) {
 			System.out.println("Couldn't send alive message: " + e.getMessage());
 			cancel();
