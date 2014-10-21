@@ -14,6 +14,7 @@ import channels.Channel;
 import channels.ChannelSet;
 import channels.TcpChannel;
 import util.Config;
+import util.FixedParameters;
 import util.TerminableThread;
 
 /**
@@ -40,7 +41,7 @@ public class ComputationRequestListener extends TerminableThread {
 	}
 
 	private void createThreadPool() {
-		threadPool = Executors.newCachedThreadPool();
+		threadPool = Executors.newFixedThreadPool(FixedParameters.CONCURRENT_NODE_THREADS);
 	}
 
 	@Override
