@@ -1,5 +1,6 @@
 package node;
 
+import util.ConcreteShellExceptionHandler;
 import util.Config;
 import util.NodeLogger;
 import util.ShellExceptionHandler;
@@ -63,14 +64,7 @@ public class Node implements INodeCli, Runnable {
 	}
 
 	private void initializeShell() {
-		shell = new Shell(componentName, userRequestStream, userResponseStream, new ShellExceptionHandler() {
-			
-			@Override
-			public boolean handle(Throwable throwable, PrintStream out) {
-				// TODO Auto-generated method stub
-				return false;
-			}
-		});
+		shell = new Shell(componentName, userRequestStream, userResponseStream, new ConcreteShellExceptionHandler());
 		shell.register(this);
 	}
 
