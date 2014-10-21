@@ -1,4 +1,4 @@
-package util;
+package computation;
 
 public enum ResultStatus {
 OK,

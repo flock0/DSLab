@@ -1,7 +1,7 @@
 Reflect about your solution!
 
 Summary:
-- TODO
+The purpose of readme.txt is to reflect about your solution. It should contain a short summary of the status of your code so that a tutor can get the information right before the mandatory interview (see below) and can give you some tips for the next assignment.
 
 - Sync über node in
 -- AliveListener.refreshNode()
@@ -12,13 +12,14 @@ Dann purgeInactiveNodes: removeFromActiveNodes() entfernt die, die vorher halbat
 Dann refreshNodes: addToActiveNodes wird fertig gemacht.
 Ergebnis: Node ist in Operator-Listen nur halbat drinnen.
 
-
+ThreadPool cached. D.h. nach 60 sec ohne arbeit fahren sie herunter
 
 Interrupts mehrstufig: 
 CloudController stößt shutdown an
 ClientListener schließt den ServerSocket, dann jeden ClientSocket, wodurch die Threads im ThreadPool interrupted werden
 Danach kann der ThreadPool heruntergefahren werden
 
+hack zum ungehen der concurrentskiplistset beschreiben. UUID compareto
 
 analog beim Node mit dessen ComputationRequestListenern
 

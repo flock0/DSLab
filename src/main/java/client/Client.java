@@ -6,11 +6,11 @@ import java.io.PrintStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
+import channels.Channel;
+import channels.TcpChannel;
 import cli.Command;
 import cli.Shell;
-import util.Channel;
 import util.Config;
-import util.TcpChannel;
 
 public class Client implements IClientCli, Runnable {
 

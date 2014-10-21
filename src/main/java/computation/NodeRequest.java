@@ -1,4 +1,4 @@
-package node;
+package computation;
 
 /**
  * A request for computation that will be sent to a node

@@ -10,11 +10,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import channels.Channel;
+import channels.ChannelSet;
+import channels.TcpChannel;
 import node.SingleComputationHandler;
-import util.Channel;
 import util.Config;
-import util.ChannelSet;
-import util.TcpChannel;
 import util.TerminableThread;
 
 /**

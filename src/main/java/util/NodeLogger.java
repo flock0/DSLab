@@ -5,7 +5,8 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.Date;
 
-import node.NodeRequest;
+import computation.ComputationResult;
+import computation.NodeRequest;
 
 public class NodeLogger {
 

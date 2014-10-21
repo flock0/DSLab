@@ -1,7 +1,5 @@
-package node;
+package computation;
 
-import util.ComputationResult;
-import util.ResultStatus;
 
 public class MultiplyComputationUnit implements ComputationUnit {
 

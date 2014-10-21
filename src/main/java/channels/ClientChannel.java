@@ -1,13 +1,12 @@
-package controller;
+package channels;
 
 import java.io.IOException;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
 
-import node.ComputationRequestType;
-import util.Channel;
-import util.ChannelDecorator;
+import computation.ComputationRequestType;
+import controller.ClientRequest;
 
 /**
  * Validates the client requests

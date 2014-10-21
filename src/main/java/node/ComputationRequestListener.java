@@ -10,10 +10,10 @@ import java.util.concurrent.TimeUnit;
 
 import javax.print.CancelablePrintJob;
 
-import util.Channel;
-import util.ChannelSet;
+import channels.Channel;
+import channels.ChannelSet;
+import channels.TcpChannel;
 import util.Config;
-import util.TcpChannel;
 import util.TerminableThread;
 
 /**

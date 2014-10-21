@@ -3,13 +3,16 @@ package node;
 import java.io.IOException;
 import java.net.Socket;
 
-import util.Channel;
-import util.ChannelSet;
-import util.ComputationChannel;
-import util.ComputationResult;
+import channels.Channel;
+import channels.ChannelSet;
+import channels.ComputationChannel;
+import computation.ComputationResult;
+import computation.ComputationUnit;
+import computation.ComputationUnitFactory;
+import computation.NodeRequest;
+import computation.ResultStatus;
 import util.Config;
 import util.NodeLogger;
-import util.ResultStatus;
 
 public class SingleComputationHandler implements Runnable {
 

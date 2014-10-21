@@ -1,6 +1,5 @@
-package node;
+package computation;
 
-import util.ComputationResult;
 
 
 public interface ComputationUnit {

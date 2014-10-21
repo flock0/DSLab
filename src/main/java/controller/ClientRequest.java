@@ -1,6 +1,6 @@
 package controller;
 
-import node.ComputationRequestType;
+import computation.ComputationRequestType;
 
 /**
  * Contains a single client command / request

@@ -8,14 +8,15 @@ import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
-import node.NodeRequest;
-import util.Channel;
-import util.ChannelSet;
-import util.ComputationChannel;
-import util.ComputationResult;
+import channels.Channel;
+import channels.ChannelSet;
+import channels.ClientChannel;
+import channels.ComputationChannel;
+import channels.TcpChannel;
+import computation.ComputationResult;
+import computation.NodeRequest;
 import util.Config;
 import util.FixedParameters;
-import util.TcpChannel;
 
 public class SingleClientHandler implements Runnable {
 
