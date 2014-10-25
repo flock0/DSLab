@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
@@ -253,16 +255,17 @@ public class SingleClientHandler implements Runnable {
 		int usageCost = calculateUsageCost(result);
 		synchronized(node) {
 			synchronized(activeNodes) {
+				// Remove Node from all Operator Sets, change the Usage value and readd.
+				List<ConcurrentSkipListSet<Node>> setsWithNodes = new ArrayList<>();
+				for(ConcurrentSkipListSet<Node> operatorSet : activeNodes.values()) {
+					if(operatorSet.contains(node))
+						setsWithNodes.add(operatorSet);
+					
+					operatorSet.remove(node);
+				}
 				node.setUsage(node.getUsage() + usageCost);
-
-				for(ConcurrentSkipListSet<Node> set : activeNodes.values())
-					synchronized(set) {
-						if(set.contains(node)) {
-
-							set.remove(node);
-							set.add(node);
-						}
-					}
+				for(ConcurrentSkipListSet<Node> operatorSet : setsWithNodes)
+					operatorSet.add(node);
 			}
 		}
 

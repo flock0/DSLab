@@ -155,19 +155,17 @@ public class AliveListener extends TerminableThread {
 	}
 
 	private void updateActiveNodes(Node node, String newOperators) {
-		// Remove node from unavailable operators lists
-		for(char operator : node.getAllowedOperators().toCharArray()) {
-			if(newOperators.indexOf(operator) == -1)
-				synchronized(activeNodes.get(operator)) {
+		synchronized(activeNodes) {
+			// Remove node from unavailable operators lists
+			for(char operator : node.getAllowedOperators().toCharArray()) {
+				if(newOperators.indexOf(operator) == -1)
 					activeNodes.get(operator).remove(node);
-				}
-		}
-		// Add node to now available operators lists
-		for (char operator : newOperators.toCharArray()) {
-			if(node.getAllowedOperators().indexOf(operator) == -1)
-				synchronized(activeNodes.get(operator)) {
+			}
+			// Add node to now available operators lists
+			for (char operator : newOperators.toCharArray()) {
+				if(node.getAllowedOperators().indexOf(operator) == -1)
 					activeNodes.get(operator).add(node);
-				}
+			}
 		}
 	}
 

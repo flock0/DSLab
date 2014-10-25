@@ -9,9 +9,6 @@ alice:		!login alice 12345
 alice:		!compute 50 - 10
 >			verify("40")
 
-*	Client			waste
-*	Client			time
-
 alice:		!compute 555 + 500
 >			verify("1055")
 

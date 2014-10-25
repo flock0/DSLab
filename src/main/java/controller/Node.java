@@ -15,16 +15,11 @@ public class Node implements Comparable<Node>{
 	private String allowedOperators;
 	private int usage;
 	private long lastAliveTimestamp;
-	private UUID uuid; // Used as a hack to circumvent the limit on ConcurrentSkipListSets
 	
 	public Node(InetAddress address, int port) {
 		this.address = address;
 		this.port = port;
 		usage = 0;
-		/* Assign a random UUID so that nodes with the same usage count 
-		 * can still be within the ConcurrentSkipListSet at the same time
-		 */
-		uuid = UUID.randomUUID();  
 	}
 	public String getAllowedOperators() {
 		return allowedOperators;
@@ -49,9 +44,6 @@ public class Node implements Comparable<Node>{
 	}
 	public int getTCPPort() {
 		return port;
-	}
-	private UUID getUUID() {
-		return uuid;
 	}
 	public boolean isOnline() {
 		return System.currentTimeMillis() - lastAliveTimestamp < TimeoutPeriod;
@@ -84,13 +76,23 @@ public class Node implements Comparable<Node>{
 		return builder.toString();
 	}
 	@Override
+	public boolean equals(Object other) {
+		if(other != null && other instanceof Node)
+			return getNetworkID().equals(((Node) other).getNetworkID());
+		return false;
+	}
+	@Override
+	public int hashCode() {
+		return getNetworkID().hashCode();
+	}
+	@Override
 	public int compareTo(Node other) {
 		if(getUsage() < other.getUsage())
 			return -1;
 		else if(getUsage() > other.getUsage())
 			return 1;
 		else {
-			return uuid.compareTo(other.getUUID()); // Avoid returning 0 by comparing the random UUIDs
+			return getNetworkID().compareTo(other.getNetworkID()); // Avoid returning 0 by comparing the NetworkIDs
 		}
 	}
 }
