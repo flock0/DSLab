@@ -1,5 +1,7 @@
 package controller;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import util.Config;
 import util.FixedParameters;
 
@@ -9,29 +11,29 @@ import util.FixedParameters;
 public class User {
 	
 	private String username;
-	private int credits;
+	private AtomicInteger credits;
 	private String password;
-	private int concurrentOnlineCounter;
+	private AtomicInteger concurrentOnlineCounter;
 	
 	public User(String username, Config config) {
 		this.username = username;
-		credits = config.getInt(username + ".credits");
+		credits = new AtomicInteger(config.getInt(username + ".credits"));
 		password = config.getString(username + ".password");
-		concurrentOnlineCounter = 0;
+		concurrentOnlineCounter = new AtomicInteger(0);
 	}
 	
 	public int getCredits() {
-		return credits;
+		return credits.get();
 	}
 	public void setCredits(int credits) {
-		this.credits = credits;
+		this.credits.set(credits);
 	}
 	public String getUsername() {
 		return username;
 	}
 
 	public boolean isOnline() {
-		return concurrentOnlineCounter > 0;
+		return concurrentOnlineCounter.get() > 0;
 	}
 	private String isOnlineAsString() {
 		if(isOnline())
@@ -40,17 +42,16 @@ public class User {
 	}
 
 	public void increaseOnlineCounter() {
-		concurrentOnlineCounter++;
+		concurrentOnlineCounter.incrementAndGet();
 	}
 	public void decreaseOnlineCounter() {
-		if(concurrentOnlineCounter > 0)
-			concurrentOnlineCounter--;
+		concurrentOnlineCounter.decrementAndGet();
 	}
 	public boolean isCorrectPassword(String passwordToCheck) {
 		return password.equals(passwordToCheck);
 	}
 	public boolean hasEnoughCredits(ClientRequest request) {
-		return credits >= (request.getOperators().length * FixedParameters.CREDIT_COST_PER_OPERATOR);
+		return credits.get() >= (request.getOperators().length * FixedParameters.CREDIT_COST_PER_OPERATOR);
 	}
 	@Override
 	public String toString() {
@@ -59,7 +60,7 @@ public class User {
 		builder.append(" ");
 		builder.append(isOnlineAsString());
 		builder.append(" Credits: ");
-		builder.append(credits);
+		builder.append(credits.get());
 		builder.append('\n');
 		return builder.toString();
 	}
