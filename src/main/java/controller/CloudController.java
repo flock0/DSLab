@@ -1,9 +1,6 @@
 package controller;
 
-import util.ConcreteShellExceptionHandler;
 import util.Config;
-import util.ShellExceptionHandler;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -86,7 +83,7 @@ public class CloudController implements ICloudControllerCli, Runnable {
 	}
 	
 	private void initializeShell() {
-		shell = new Shell(componentName, userRequestStream, userResponseStream, new ConcreteShellExceptionHandler());
+		shell = new Shell(componentName, userRequestStream, userResponseStream);
 		shell.register(this);
 	}
 

@@ -10,7 +10,6 @@ import channels.Channel;
 import channels.TcpChannel;
 import cli.Command;
 import cli.Shell;
-import util.ConcreteShellExceptionHandler;
 import util.Config;
 
 public class Client implements IClientCli, Runnable {
@@ -56,7 +55,7 @@ public class Client implements IClientCli, Runnable {
 	}
 
 	private void initializeShell() {
-		shell = new Shell(componentName, userRequestStream, userResponseStream, new ConcreteShellExceptionHandler());
+		shell = new Shell(componentName, userRequestStream, userResponseStream);
 		shell.register(this);
 	}
 

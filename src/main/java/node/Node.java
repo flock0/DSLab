@@ -1,9 +1,7 @@
 package node;
 
-import util.ConcreteShellExceptionHandler;
 import util.Config;
 import util.NodeLogger;
-import util.ShellExceptionHandler;
 import util.TerminableThread;
 
 import java.io.IOException;
@@ -64,7 +62,7 @@ public class Node implements INodeCli, Runnable {
 	}
 
 	private void initializeShell() {
-		shell = new Shell(componentName, userRequestStream, userResponseStream, new ConcreteShellExceptionHandler());
+		shell = new Shell(componentName, userRequestStream, userResponseStream);
 		shell.register(this);
 	}
 

@@ -1,7 +1,6 @@
 package controller;
 
 import java.net.InetAddress;
-import java.util.UUID;
 
 /**
  * A node that can be used for computation

@@ -3,8 +3,6 @@ package cli;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
 
-import util.ShellExceptionHandler;
-
 import java.io.*;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -40,7 +38,6 @@ public class Shell implements Runnable, Closeable {
 	private OutputStream out;
 	private BufferedReader in;
 	private Closeable readMonitor;
-	private ShellExceptionHandler shellExceptionHandler = null;
 
 	/**
 	 * Creates a new {@code Shell} instance.
@@ -57,23 +54,6 @@ public class Shell implements Runnable, Closeable {
 		this.out = out;
 		this.readMonitor = in;
 		this.in = new BufferedReader(new InputStreamReader(in));
-	}
-	
-	/**
-	 * Creates a new {@code Shell} instance.
-	 *
-	 * @param name
-	 *            the name of the {@code Shell} displayed in the prompt
-	 * @param in
-	 *            the {@code InputStream} to read messages from
-	 * @param out
-	 *            the {@code OutputStream} to write messages to
-	 * @param shellExceptionHandler
-	 * 			  the {@code ShellExceptionHandler} that reformats exception messages
-	 */
-	public Shell(String name, InputStream in, OutputStream out, ShellExceptionHandler shellExceptionHandler) {
-		this(name, in, out);
-		this.shellExceptionHandler = shellExceptionHandler;
 	}
 
 	/**
@@ -100,13 +80,8 @@ public class Shell implements Runnable, Closeable {
 				try {
 					result = invoke(line);
 				} catch (Throwable throwable) {
-					
 					ByteArrayOutputStream str = new ByteArrayOutputStream(1024);
-					boolean handled = false;
-					if(shellExceptionHandler != null)
-						handled = shellExceptionHandler.handle(throwable, new PrintStream(str, true));
-					if(!handled)
-						throwable.printStackTrace(new PrintStream(str, true));
+					throwable.printStackTrace(new PrintStream(str, true));
 					result = str.toString();
 				}
 				if (result != null) {
