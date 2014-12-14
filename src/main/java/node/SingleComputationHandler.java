@@ -1,31 +1,25 @@
 package node;
 
 import java.io.IOException;
-import java.net.Socket;
 
+import util.Config;
+import util.NodeLogger;
 import channels.Channel;
-import channels.ChannelSet;
-import channels.ComputationChannel;
+import channels.ComputationCommunicator;
+
 import computation.ComputationResult;
 import computation.ComputationUnit;
 import computation.ComputationUnitFactory;
 import computation.NodeRequest;
 import computation.ResultStatus;
-import util.Config;
-import util.NodeLogger;
 
 public class SingleComputationHandler implements Runnable {
 
-	private ComputationChannel channel;
-	private Config config;
+	private ComputationCommunicator channel;
 	private String allowedOperators;
-	private ChannelSet openChannels;
-	private NodeLogger logger;
 
 	public SingleComputationHandler(Channel channel, Config config) {
-		this.channel = new ComputationChannel(channel);
-		this.config = config;
-		
+		this.channel = new ComputationCommunicator(channel);
 		allowedOperators = config.getString("node.operators");
 	}
 

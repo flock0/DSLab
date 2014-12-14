@@ -1,18 +1,14 @@
 package node;
 
-import util.ConcreteShellExceptionHandler;
-import util.Config;
-import util.NodeLogger;
-import util.ShellExceptionHandler;
-import util.TerminableThread;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.net.DatagramSocket;
-import java.net.Inet4Address;
 import java.util.Timer;
 
+import util.ConcreteShellExceptionHandler;
+import util.Config;
+import util.NodeLogger;
+import util.TerminableThread;
 import cli.Command;
 import cli.Shell;
 

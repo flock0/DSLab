@@ -1,17 +1,14 @@
 package controller;
 
-import util.ConcreteShellExceptionHandler;
-import util.Config;
-import util.ShellExceptionHandler;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.net.SocketException;
 import java.util.Timer;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
+import util.ConcreteShellExceptionHandler;
+import util.Config;
 import cli.Command;
 import cli.Shell;
 

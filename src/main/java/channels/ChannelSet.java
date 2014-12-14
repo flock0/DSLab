@@ -1,13 +1,9 @@
 package channels;
 
-import java.io.IOException;
-import java.net.Socket;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListSet;
 
 /**
  * Keeps information about all open Channels and closes them if asked.
