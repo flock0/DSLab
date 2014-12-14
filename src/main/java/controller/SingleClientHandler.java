@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentSkipListSet;
 
 import channels.Channel;
 import channels.ChannelSet;
-import channels.ClientChannel;
+import channels.ClientCommunicator;
 import channels.ComputationChannel;
 import channels.TcpChannel;
 import computation.ComputationResult;
@@ -25,7 +25,7 @@ public class SingleClientHandler implements Runnable {
 	private Config config;
 	private ConcurrentHashMap<Character, ConcurrentSkipListSet<Node>> activeNodes;
 	private ConcurrentHashMap<String, User> users;
-	private ClientChannel channel;
+	private ClientCommunicator communicator;
 	private User currentUser = null;
 	private ComputationChannel currentComputationChannel = null;
 	private boolean sessionIsBeingTerminated = false;
@@ -40,33 +40,33 @@ public class SingleClientHandler implements Runnable {
 		this.users = users;
 		this.openChannels = openChannels;
 
-		this.channel = new ClientChannel(channel);
+		this.communicator = new ClientCommunicator(channel);
 	}
 
 	@Override
 	public void run() {
 		try {
 			while (true) {
-				ClientRequest request = channel.getRequest();
+				ClientRequest request = communicator.getRequest();
 
 				switch (request.getType()) {
 				case Login:
-					channel.println(handleLogin(request));
+					communicator.sendAnswer(handleLogin(request));
 					break;
 				case Logout:
-					channel.println(handleLogout());
+					communicator.sendAnswer(handleLogout());
 					break;
 				case Credits:
-					channel.println(handleCredits());
+					communicator.sendAnswer(handleCredits());
 					break;
 				case Buy:
-					channel.println(handleBuy(request));
+					communicator.sendAnswer(handleBuy(request));
 					break;
 				case List:
-					channel.println(handleList());
+					communicator.sendAnswer(handleList());
 					break;
 				case Compute:
-					channel.println(handleCompute(request));
+					communicator.sendAnswer(handleCompute(request));
 					break;
 				default:
 					break; // Skip invalid requests
@@ -290,7 +290,7 @@ public class SingleClientHandler implements Runnable {
 			currentUser.decreaseOnlineCounter();
 			currentUser = null;
 		}
-		channel.close();
+		communicator.close();
 	}
 
 }
