@@ -3,31 +3,31 @@ package controller;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
-import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
-import channels.Channel;
-import channels.ChannelSet;
-import channels.ClientChannel;
-import channels.ComputationChannel;
-import channels.TcpChannel;
-import computation.ComputationResult;
-import computation.NodeRequest;
 import util.Config;
 import util.FixedParameters;
+import channels.Channel;
+import channels.ChannelSet;
+import channels.ClientCommunicator;
+import channels.ComputationCommunicator;
+import channels.TcpChannel;
+
+import computation.ComputationResult;
+import computation.NodeRequest;
 
 public class SingleClientHandler implements Runnable {
 
 	private Config config;
 	private ConcurrentHashMap<Character, ConcurrentSkipListSet<Node>> activeNodes;
 	private ConcurrentHashMap<String, User> users;
-	private ClientChannel channel;
+	private ClientCommunicator communicator;
 	private User currentUser = null;
-	private ComputationChannel currentComputationChannel = null;
+	private ComputationCommunicator currentComputationCommunicator = null;
 	private boolean sessionIsBeingTerminated = false;
 	private ChannelSet openChannels;
 
@@ -40,33 +40,33 @@ public class SingleClientHandler implements Runnable {
 		this.users = users;
 		this.openChannels = openChannels;
 
-		this.channel = new ClientChannel(channel);
+		this.communicator = new ClientCommunicator(channel);
 	}
 
 	@Override
 	public void run() {
 		try {
 			while (true) {
-				ClientRequest request = channel.getRequest();
+				ClientRequest request = communicator.getRequest();
 
 				switch (request.getType()) {
 				case Login:
-					channel.println(handleLogin(request));
+					communicator.sendAnswer(handleLogin(request));
 					break;
 				case Logout:
-					channel.println(handleLogout());
+					communicator.sendAnswer(handleLogout());
 					break;
 				case Credits:
-					channel.println(handleCredits());
+					communicator.sendAnswer(handleCredits());
 					break;
 				case Buy:
-					channel.println(handleBuy(request));
+					communicator.sendAnswer(handleBuy(request));
 					break;
 				case List:
-					channel.println(handleList());
+					communicator.sendAnswer(handleList());
 					break;
 				case Compute:
-					channel.println(handleCompute(request));
+					communicator.sendAnswer(handleCompute(request));
 					break;
 				default:
 					break; // Skip invalid requests
@@ -185,15 +185,16 @@ public class SingleClientHandler implements Runnable {
 					//// Find Node for next request ////
 					Node nextNodeToTry = orderedNodesForNextOperator.next();
 					if(nextNodeToTry.isOnline()) {
-						currentComputationChannel = null;
+						currentComputationCommunicator = null;
 						try {
-							currentComputationChannel = new ComputationChannel(
-									new TcpChannel(
-											new Socket(nextNodeToTry.getIPAddress(), nextNodeToTry.getTCPPort())));
-							openChannels.add(currentComputationChannel);
-							currentComputationChannel.requestComputation(computationRequest);
+							Channel channelForCommunicator = new TcpChannel(
+									new Socket(nextNodeToTry.getIPAddress(), nextNodeToTry.getTCPPort())); 
+							openChannels.add(channelForCommunicator);
+							currentComputationCommunicator = new ComputationCommunicator(channelForCommunicator);
+							
+							currentComputationCommunicator.requestComputation(computationRequest);
 
-							ComputationResult result = currentComputationChannel.getResult();
+							ComputationResult result = currentComputationCommunicator.getResult();
 
 							//// Check Result ////
 							switch(result.getStatus()) {
@@ -215,8 +216,8 @@ public class SingleClientHandler implements Runnable {
 						} catch (SocketException e) {
 							// Just skip this node for now and try another one
 						} finally {
-							if(currentComputationChannel != null)
-								currentComputationChannel.close();
+							if(currentComputationCommunicator != null)
+								currentComputationCommunicator.close();
 						}
 
 					}
@@ -234,8 +235,8 @@ public class SingleClientHandler implements Runnable {
 				return "Error: An internal error occured";
 			throw e;
 		} finally {
-			if(currentComputationChannel != null)
-				currentComputationChannel.close();
+			if(currentComputationCommunicator != null)
+				currentComputationCommunicator.close();
 		}
 	}
 
@@ -290,7 +291,7 @@ public class SingleClientHandler implements Runnable {
 			currentUser.decreaseOnlineCounter();
 			currentUser = null;
 		}
-		channel.close();
+		communicator.close();
 	}
 
 }

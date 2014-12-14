@@ -2,20 +2,17 @@ package node;
 
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.net.Socket;
 import java.net.SocketException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import javax.print.CancelablePrintJob;
-
-import channels.Channel;
-import channels.ChannelSet;
-import channels.TcpChannel;
 import util.Config;
 import util.FixedParameters;
 import util.TerminableThread;
+import channels.Channel;
+import channels.ChannelSet;
+import channels.TcpChannel;
 
 /**
  * Listens for incoming computation requests and delegates them using a thread

@@ -2,7 +2,6 @@ package controller;
 
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.net.Socket;
 import java.net.SocketException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -10,12 +9,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import util.Config;
+import util.TerminableThread;
 import channels.Channel;
 import channels.ChannelSet;
 import channels.TcpChannel;
-import node.SingleComputationHandler;
-import util.Config;
-import util.TerminableThread;
 
 /**
  * Listens for client connections at the TCP port
