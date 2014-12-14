@@ -3,22 +3,22 @@ package controller;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
-import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
+import util.Config;
+import util.FixedParameters;
 import channels.Channel;
 import channels.ChannelSet;
 import channels.ClientCommunicator;
-import channels.ComputationChannel;
+import channels.ComputationCommunicator;
 import channels.TcpChannel;
+
 import computation.ComputationResult;
 import computation.NodeRequest;
-import util.Config;
-import util.FixedParameters;
 
 public class SingleClientHandler implements Runnable {
 
@@ -27,7 +27,7 @@ public class SingleClientHandler implements Runnable {
 	private ConcurrentHashMap<String, User> users;
 	private ClientCommunicator communicator;
 	private User currentUser = null;
-	private ComputationChannel currentComputationChannel = null;
+	private ComputationCommunicator currentComputationCommunicator = null;
 	private boolean sessionIsBeingTerminated = false;
 	private ChannelSet openChannels;
 
@@ -185,15 +185,16 @@ public class SingleClientHandler implements Runnable {
 					//// Find Node for next request ////
 					Node nextNodeToTry = orderedNodesForNextOperator.next();
 					if(nextNodeToTry.isOnline()) {
-						currentComputationChannel = null;
+						currentComputationCommunicator = null;
 						try {
-							currentComputationChannel = new ComputationChannel(
-									new TcpChannel(
-											new Socket(nextNodeToTry.getIPAddress(), nextNodeToTry.getTCPPort())));
-							openChannels.add(currentComputationChannel);
-							currentComputationChannel.requestComputation(computationRequest);
+							Channel channelForCommunicator = new TcpChannel(
+									new Socket(nextNodeToTry.getIPAddress(), nextNodeToTry.getTCPPort())); 
+							openChannels.add(channelForCommunicator);
+							currentComputationCommunicator = new ComputationCommunicator(channelForCommunicator);
+							
+							currentComputationCommunicator.requestComputation(computationRequest);
 
-							ComputationResult result = currentComputationChannel.getResult();
+							ComputationResult result = currentComputationCommunicator.getResult();
 
 							//// Check Result ////
 							switch(result.getStatus()) {
@@ -215,8 +216,8 @@ public class SingleClientHandler implements Runnable {
 						} catch (SocketException e) {
 							// Just skip this node for now and try another one
 						} finally {
-							if(currentComputationChannel != null)
-								currentComputationChannel.close();
+							if(currentComputationCommunicator != null)
+								currentComputationCommunicator.close();
 						}
 
 					}
@@ -234,8 +235,8 @@ public class SingleClientHandler implements Runnable {
 				return "Error: An internal error occured";
 			throw e;
 		} finally {
-			if(currentComputationChannel != null)
-				currentComputationChannel.close();
+			if(currentComputationCommunicator != null)
+				currentComputationCommunicator.close();
 		}
 	}
 
