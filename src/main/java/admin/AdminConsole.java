@@ -1,15 +1,24 @@
 package admin;
 
+import cli.Command;
+import cli.Shell;
+import controller.AdminService;
 import controller.IAdminConsole;
+import controller.Node;
 import model.ComputationRequestInfo;
 import util.Config;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.security.Key;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Timer;
 
 /**
  * Please note that this class is not needed for Lab 1, but will later be
@@ -22,7 +31,9 @@ public class AdminConsole implements IAdminConsole, Runnable {
 	private Config config;
 	private InputStream userRequestStream;
 	private PrintStream userResponseStream;
-
+	private Shell shell = null;
+	private final String name = "adminService";
+	
 	/**
 	 * @param componentName
 	 *            the name of the component - represented in the prompt
@@ -39,13 +50,30 @@ public class AdminConsole implements IAdminConsole, Runnable {
 		this.config = config;
 		this.userRequestStream = userRequestStream;
 		this.userResponseStream = userResponseStream;
-
-		// TODO
+		
+		initializeShell();
 	}
 
+	private void initializeShell() {
+		shell = new Shell(componentName, userRequestStream, userResponseStream);
+		shell.register(this);
+	}
+	
+	private void shutdown() {		
+		if(shell != null)
+			shell.close();		
+	}
+	
+	@Command
+	public void exit()
+	{
+		shutdown();		
+	}
+	
 	@Override
 	public void run() {
-		// TODO
+		System.out.println(componentName + " up and waiting for commands!");
+		shell.run();
 	}
 
 	@Override
@@ -61,10 +89,27 @@ public class AdminConsole implements IAdminConsole, Runnable {
 		return null;
 	}
 
+	@Command
 	@Override
 	public LinkedHashMap<Character, Long> statistics() throws RemoteException {
-		// TODO Auto-generated method stub
-		return null;
+		LinkedHashMap<Character, Long> statistic = null;
+		if (System.getSecurityManager() == null) {
+	        //    System.setSecurityManager(new SecurityManager());
+	        }
+	        try {	            
+	            Registry registry = LocateRegistry.getRegistry(config.getString("controller.host"), config.getInt("controller.rmi.port"));
+	            IAdminConsole comp = (IAdminConsole) registry.lookup(name);
+	            statistic = comp.statistics();
+	            for(Entry<Character, Long> entry : statistic.entrySet())
+	            {
+	            	System.err.println(entry.getKey() + " " + entry.getValue());
+	            }	            
+	            return statistic;
+	        } catch (Exception e) {
+	            //System.err.println("statistics exception:");
+	            e.printStackTrace();
+	        }
+	        return statistic;
 	}
 
 	@Override
@@ -87,6 +132,6 @@ public class AdminConsole implements IAdminConsole, Runnable {
 	public static void main(String[] args) {
 		AdminConsole adminConsole = new AdminConsole(args[0], new Config(
 				"admin"), System.in, System.out);
-		// TODO: start the admin console
+		new Thread(adminConsole).start();
 	}
 }

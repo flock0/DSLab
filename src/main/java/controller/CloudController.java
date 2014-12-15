@@ -24,8 +24,7 @@ public class CloudController implements ICloudControllerCli, Runnable {
 	private ConcurrentHashMap<String, User> users = null;
 	private AliveListener aliveListener = null;
 	private ClientListener clientListener = null;
-	private boolean successfullyInitialized = false;
-	
+	private boolean successfullyInitialized = false;		
 
 	/**
 	 * @param componentName
@@ -85,13 +84,20 @@ public class CloudController implements ICloudControllerCli, Runnable {
 		shell = new Shell(componentName, userRequestStream, userResponseStream);
 		shell.register(this);
 	}
+	
+	private void startAdminService()
+	{
+		AdminService.export(users, config);	
+	}
+	
 
 	@Override
 	public void run() {
 		if(successfullyInitialized) {
 			startNodePurgeTimer();
-			startListeners();
+			startListeners();			
 			startShell();
+			startAdminService();
 		} else {
 			shutdown();
 		}
@@ -157,6 +163,7 @@ public class CloudController implements ICloudControllerCli, Runnable {
 			nodePurgeTimer.cancel();
 		if(shell != null)
 			shell.close();
+		AdminService.unexport();
 	}
 
 	/**
