@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 import util.Config;
 import util.TerminableThread;
+import channels.Base64Channel;
 import channels.Channel;
 import channels.ChannelSet;
 import channels.TcpChannel;
@@ -51,7 +52,7 @@ public class ClientListener extends TerminableThread {
 		if (serverSocket != null) {
 			try {
 				while (true) {
-					Channel nextRequest = new TcpChannel(serverSocket.accept());
+					Channel nextRequest = new Base64Channel(new TcpChannel(serverSocket.accept()));
 					openChannels.add(nextRequest);
 					threadPool.execute(new SingleClientHandler(nextRequest, activeNodes, users, openChannels, config));					
 					openChannels.cleanUp(); // Make a semi-regular clean up

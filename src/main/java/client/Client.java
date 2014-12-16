@@ -1,16 +1,25 @@
 package client;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
+import org.bouncycastle.util.encoders.Base64;
+
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.SecureRandom;
+
+import channels.Base64Channel;
 import channels.Channel;
 import channels.TcpChannel;
 import cli.Command;
 import cli.Shell;
 import util.Config;
+import util.Keys;
 
 public class Client implements IClientCli, Runnable {
 
@@ -20,6 +29,7 @@ public class Client implements IClientCli, Runnable {
 	private PrintStream userResponseStream;
 	private Channel channel = null;
 	private Shell shell;
+	private PublicKey controllerKey;
 	private boolean successfullyInitialized = false;
 
 	/**
@@ -37,21 +47,28 @@ public class Client implements IClientCli, Runnable {
 		this.componentName = componentName;
 		this.config = config;
 		this.userRequestStream = userRequestStream;
-		this.userResponseStream = userResponseStream;
-
+		this.userResponseStream = userResponseStream;		
+		
 		try {
+			loadControllerPublicKey();
 			initializeSocket();
 			initializeShell();
 			successfullyInitialized = true;
 		} catch (UnknownHostException e) {
 			System.out.println("Couldn't resolve IP address: " + e.getMessage());
 		} catch (IOException e) {
-			System.out.println("Couldn't create socket: " + e.getMessage());
+			System.out.println("Couldn't initialize client: " + e.getMessage());
 		}
 	}
 
+	private void loadControllerPublicKey() throws IOException {
+		String filePath = System.getProperty("user.dir") + File.separator + config.getString("controller.key");
+		filePath = filePath.replace("/", File.separator);
+		controllerKey = Keys.readPublicPEM(new File(filePath));
+	}
+
 	private void initializeSocket() throws UnknownHostException, IOException {
-		channel = new TcpChannel(new Socket(config.getString("controller.host"), config.getInt("controller.tcp.port")));
+		channel = new Base64Channel(new TcpChannel(new Socket(config.getString("controller.host"), config.getInt("controller.tcp.port"))));
 	}
 
 	private void initializeShell() {
@@ -127,13 +144,17 @@ public class Client implements IClientCli, Runnable {
 		new Thread(client).start();
 	}
 
-	// --- Commands needed for Lab 2. Please note that you do not have to
-	// implement them for the first submission. ---
-
 	@Override
 	public String authenticate(String username) throws IOException {
-		// TODO Auto-generated method stub
-		return null;
+		PrivateKey userPrivateKey = loadUserPrivateKey(username);
+		SecureChannelSetup auth = new SecureChannelSetup(channel, userPrivateKey, controllerKey);
+		return null; //TODO: auth durchführen, null nur temporär
 	}
 
+	private PrivateKey loadUserPrivateKey(String username) throws IOException {
+		String filePath = System.getProperty("user.dir") + File.separator + config.getString("keys.dir")
+				+ File.separator + username + ".pem";
+		filePath = filePath.replace("/", File.separator);
+		return Keys.readPrivatePEM(new File(filePath));
+	}
 }

@@ -1,13 +1,15 @@
 TODO-Liste:
 -  Secure Channel:
   - Client Behaviour:
-    - !authenticate-Message akzeptieren und verarbeiten.
-    - !login verbieten (?? Annahme).
-    - Public Key vom Controller laden (util.keys verwenden).
-    - Private Key laden (util.keys verwenden).
+    + !authenticate-Message akzeptieren und verarbeiten.
+    + Public Key vom Controller laden (util.keys verwenden).
+    + Private Key laden (util.keys verwenden).
     - Bei nicht-existieren Fehlermeldung.
     - Aufpassen, dass sonst keine Commands erlaubt sind.
-    - Authentication-Challenge verschicken.
+    + Authentication-Challenge verschicken.
+    - Vermeiden, dass man sich öfters als 1 mal authentifiziert.
+    - !login ist nicht mehr gefordert.
+    + Fehlerhaftes Protokoll abfangen (Falsche Parameter in Messages)
   - Cloud Controller Behaviour:
     - Private Key beim Starten einlesen
     - Bei Eintreffen eines Requests:
@@ -17,7 +19,7 @@ TODO-Liste:
     - Aufpassen, falls mitten in der Session nicht-verschlüsselte Messages kommen.
   - Authentication Algorithm:
     - Message-Austausch wie in der Angabe beschrieben:
-    - 1. RSA-verschlüsseltes !authenticate
+    + 1. RSA-verschlüsseltes !authenticate
     - Challenge base64-encoden, dann RSA-encrypten, dann nochmal base64-encoden
     - 2. RSA-verschlüsseltes !ok
     - Alle Argumente einzeln base64-encoden, dann konkatenieren und RSA-verschlüsseln, dann nochmal base64-encoden
