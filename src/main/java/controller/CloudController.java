@@ -1,9 +1,12 @@
 package controller;
 
 import util.Config;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Timer;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -24,7 +27,9 @@ public class CloudController implements ICloudControllerCli, Runnable {
 	private ConcurrentHashMap<String, User> users = null;
 	private AliveListener aliveListener = null;
 	private ClientListener clientListener = null;
-	private boolean successfullyInitialized = false;		
+	private boolean successfullyInitialized = false;	
+	private AdminService adminService = null;
+	private LinkedHashMap<Character, Long> statistic;
 
 	/**
 	 * @param componentName
@@ -44,6 +49,7 @@ public class CloudController implements ICloudControllerCli, Runnable {
 		this.userResponseStream = userResponseStream;
 
 		try {
+			statistic = new LinkedHashMap<Character, Long>();
 			nodePurgeTimer = new Timer();
 			Node.TimeoutPeriod = config.getInt("node.timeout");
 			loadUsers();
@@ -77,7 +83,7 @@ public class CloudController implements ICloudControllerCli, Runnable {
 
 	private void initializeListeners() throws IOException {
 		aliveListener = new AliveListener(activeNodes, allNodes, config);
-		clientListener = new ClientListener(users, activeNodes, config);
+		clientListener = new ClientListener(users, activeNodes, config, statistic);
 	}
 	
 	private void initializeShell() {
@@ -86,17 +92,17 @@ public class CloudController implements ICloudControllerCli, Runnable {
 	}
 	
 	private void startAdminService()
-	{
-		AdminService.export(users, config);	
-	}
+	{		
+		adminService = new AdminService(users, statistic, config);	
+	}	
 	
 
 	@Override
 	public void run() {
 		if(successfullyInitialized) {
-			startNodePurgeTimer();
+			startNodePurgeTimer();			
 			startListeners();			
-			startShell();
+			startShell();		
 			startAdminService();
 		} else {
 			shutdown();
@@ -163,7 +169,9 @@ public class CloudController implements ICloudControllerCli, Runnable {
 			nodePurgeTimer.cancel();
 		if(shell != null)
 			shell.close();
-		AdminService.unexport();
+		if(adminService != null)		
+			adminService.close();
+		
 	}
 
 	/**

@@ -11,14 +11,17 @@ import util.Config;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.rmi.NoSuchObjectException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 import java.security.Key;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Timer;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Please note that this class is not needed for Lab 1, but will later be
@@ -32,7 +35,8 @@ public class AdminConsole implements IAdminConsole, Runnable {
 	private InputStream userRequestStream;
 	private PrintStream userResponseStream;
 	private Shell shell = null;
-	private final String name = "adminService";
+	private INotificationCallback callbackStub;
+	private NotificationCallback callback;
 	
 	/**
 	 * @param componentName
@@ -49,19 +53,43 @@ public class AdminConsole implements IAdminConsole, Runnable {
 		this.componentName = componentName;
 		this.config = config;
 		this.userRequestStream = userRequestStream;
-		this.userResponseStream = userResponseStream;
-		
+		this.userResponseStream = userResponseStream;				
 		initializeShell();
+		initializeCallbackStub();
 	}
 
 	private void initializeShell() {
 		shell = new Shell(componentName, userRequestStream, userResponseStream);
 		shell.register(this);
 	}
+	private void initializeCallbackStub()
+	{
+		try
+		{
+			callback = new NotificationCallback();
+			callbackStub = (INotificationCallback)UnicastRemoteObject.exportObject(callback, 0);			
+		}
+		catch(RemoteException e)
+		{
+			throw new RuntimeException("RemoteException during shutdown.", e);
+		}
+		
+	}
 	
 	private void shutdown() {		
 		if(shell != null)
 			shell.close();		
+		if(callbackStub != null)
+		{
+			try
+			{
+				UnicastRemoteObject.unexportObject(callbackStub, true);
+			}
+			catch(NoSuchObjectException e)
+			{
+				throw new RuntimeException("NoSuchObjectException during shutdown.", e);
+			}
+		}
 	}
 	
 	@Command
@@ -75,12 +103,39 @@ public class AdminConsole implements IAdminConsole, Runnable {
 		System.out.println(componentName + " up and waiting for commands!");
 		shell.run();
 	}
-
+	
+	@Command
+	public String subscribe(String username, int credits)
+	{
+		try
+		{			
+			if(subscribe(username, credits, callbackStub))
+			{
+				return "Successfully subscribed for user " + username + ".";
+			}
+			else
+			{
+				return "Failed to subscribed for user " + username + ".";
+			}
+		}
+		catch(RemoteException e)
+		{
+			throw new RuntimeException("RemoteException during subsribe.", e);
+		}
+				
+	}	
+	
 	@Override
 	public boolean subscribe(String username, int credits,
-			INotificationCallback callback) throws RemoteException {
-		// TODO Auto-generated method stub
-		return false;
+			INotificationCallback callback) throws RemoteException {				
+		try
+		{
+			Registry registry = LocateRegistry.getRegistry(config.getString("controller.host"), config.getInt("controller.rmi.port"));
+		    IAdminConsole comp = (IAdminConsole) registry.lookup(config.getString("binding.name"));
+		    return comp.subscribe(username, credits, callback);   
+	    } catch (Exception e) {
+      	    throw new RuntimeException("Exception during statistics.", e);
+        }  
 	}
 
 	@Override
@@ -91,25 +146,14 @@ public class AdminConsole implements IAdminConsole, Runnable {
 
 	@Command
 	@Override
-	public LinkedHashMap<Character, Long> statistics() throws RemoteException {
-		LinkedHashMap<Character, Long> statistic = null;
-		if (System.getSecurityManager() == null) {
-	        //    System.setSecurityManager(new SecurityManager());
-	        }
-	        try {	            
-	            Registry registry = LocateRegistry.getRegistry(config.getString("controller.host"), config.getInt("controller.rmi.port"));
-	            IAdminConsole comp = (IAdminConsole) registry.lookup(name);
-	            statistic = comp.statistics();
-	            for(Entry<Character, Long> entry : statistic.entrySet())
-	            {
-	            	System.err.println(entry.getKey() + " " + entry.getValue());
-	            }	            
-	            return statistic;
-	        } catch (Exception e) {
-	            //System.err.println("statistics exception:");
-	            e.printStackTrace();
-	        }
-	        return statistic;
+	public LinkedHashMap<Character, Long> statistics() throws RemoteException {	
+        try {	            
+            Registry registry = LocateRegistry.getRegistry(config.getString("controller.host"), config.getInt("controller.rmi.port"));
+            IAdminConsole comp = (IAdminConsole) registry.lookup(config.getString("binding.name"));
+            return comp.statistics();       
+        } catch (Exception e) {
+        	throw new RuntimeException("Exception during statistics.", e);
+        }        
 	}
 
 	@Override

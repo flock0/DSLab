@@ -50,7 +50,7 @@
 			<arg value="controller" />
 			<jvmarg value="-Xdebug"/>
 			<jvmarg value="-Xnoagent"/>
-			<jvmarg value="-Xrunjdwp:transport=dt_socket,address=10445,server=y,suspend=y"/>
+			<jvmarg value="-Xrunjdwp:transport=dt_socket,address=10445,server=y,suspend=n"/>
 		</java>
 	</target>
 
@@ -59,7 +59,7 @@
 			<arg value="admin" />
 			<jvmarg value="-Xdebug"/>
 			<jvmarg value="-Xnoagent"/>
-			<jvmarg value="-Xrunjdwp:transport=dt_socket,address=10446,server=y,suspend=y"/>
+			<jvmarg value="-Xrunjdwp:transport=dt_socket,address=10446,server=y,suspend=n"/>
 		</java>
 	</target>
 	

@@ -20,16 +20,41 @@ import admin.INotificationCallback;
 
 public class AdminService implements IAdminConsole {
 
-	private static Remote adminService = null;
-	private static Registry registry = null;
-	private static IAdminConsole stub = null;
-	private static final String name = "adminService";
+	private Registry registry = null;
+	private IAdminConsole remote = null;
+	private Config config;
+	private ConcurrentHashMap<String, User> users;
+	private LinkedHashMap<Character, Long> statistic;
+	
+	public AdminService(ConcurrentHashMap<String, User> users, LinkedHashMap<Character, Long> statistic, Config config)
+	{
+		super();
+		this.config = config;
+		this.users = users;
+		this.statistic = statistic;
+		try {            
+            
+            registry = LocateRegistry.createRegistry(config.getInt("controller.rmi.port"));
+            remote = (IAdminConsole) UnicastRemoteObject.exportObject(this, 0);            
+            registry.rebind(config.getString("binding.name"), remote);    
+        } catch (RemoteException e) {            
+            throw new RuntimeException("Error while starting AdminService.", e);
+        } 
+	}
 	
 	@Override
 	public boolean subscribe(String username, int credits,
-			INotificationCallback callback) throws RemoteException {
-		// TODO Auto-generated method stub
-		return false;
+		INotificationCallback callback) throws RemoteException {
+		User u = users.get(username);
+		if(u != null)
+		{
+			u.addNotificationCallback(credits, callback);
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 
 	@Override
@@ -40,9 +65,11 @@ public class AdminService implements IAdminConsole {
 
 	@Override
 	public LinkedHashMap<Character, Long> statistics() throws RemoteException {
-		LinkedHashMap<Character, Long> a = new LinkedHashMap<Character, Long>();
-		a.put('/', 12L);
-		return a;
+		synchronized(statistic)
+		{
+			return statistic;
+		}
+		
 	}
 
 	@Override
@@ -55,46 +82,28 @@ public class AdminService implements IAdminConsole {
 			throws RemoteException {
 		throw new UnsupportedOperationException("This operation is not supported in Lab 2.");
 	}
-	
-	public static void export(ConcurrentHashMap<String, User> users, Config config)
-	{
-        if (System.getSecurityManager() == null) {
-       //     System.setSecurityManager(new SecurityManager());
-        }
-        try {            
-            adminService = new AdminService();
-            registry = LocateRegistry.createRegistry(config.getInt("controller.rmi.port"));
-            stub = (IAdminConsole) UnicastRemoteObject.exportObject(adminService, 0);            
-            registry.rebind(name, stub);                  
-        } catch (Exception e) {            
-            e.printStackTrace();
-        }
-    }
-
-	public static void unexport()
+		
+	public void close()
 	{		
+		try
+		{			
+			UnicastRemoteObject.unexportObject(this, true);
+		}
+		catch(NoSuchObjectException e)
+		{
+			System.err.println("Error while unexporting object: " + e.getMessage());
+		}	
+						
 		try
 		{
 			if(registry != null)
 			{
-				registry.unbind(name);
-			}
-			if(adminService != null)
-			{
-				UnicastRemoteObject.unexportObject(adminService, true);
-			}
+				registry.unbind(config.getString("binding.name"));
+			}			
 		}
-		catch(AccessException e)
+		catch(Exception e)
 		{
-			e.printStackTrace();
+			System.err.println("Error while unbinding object: " + e.getMessage());
 		}	
-		catch(NotBoundException e)
-		{
-			e.printStackTrace();
-		}
-		catch(RemoteException e)
-		{
-			e.printStackTrace();
-		}		
-	}	
+	}		
 }

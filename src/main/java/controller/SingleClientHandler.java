@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -16,7 +17,6 @@ import channels.ChannelSet;
 import channels.ClientCommunicator;
 import channels.ComputationCommunicator;
 import channels.TcpChannel;
-
 import computation.ComputationResult;
 import computation.NodeRequest;
 
@@ -30,17 +30,19 @@ public class SingleClientHandler implements Runnable {
 	private ComputationCommunicator currentComputationCommunicator = null;
 	private boolean sessionIsBeingTerminated = false;
 	private ChannelSet openChannels;
+	private HashMap<Character, Long> statistic;
 
 	public SingleClientHandler(
 			Channel channel,
 			ConcurrentHashMap<Character, ConcurrentSkipListSet<Node>> activeNodes,
-			ConcurrentHashMap<String, User> users, ChannelSet openChannels, Config config) {
+			ConcurrentHashMap<String, User> users, ChannelSet openChannels, Config config,
+			HashMap<Character, Long> statistic) {
 		this.config = config;
 		this.activeNodes = activeNodes;
 		this.users = users;
 		this.openChannels = openChannels;
-
 		this.communicator = new ClientCommunicator(channel);
+		this.statistic = statistic;
 	}
 
 	@Override
@@ -144,29 +146,31 @@ public class SingleClientHandler implements Runnable {
 					builder.append(operator);
 		}
 		return builder.toString();
-	}
+	}	
 
 	private String handleCompute(ClientRequest request) throws IOException {
 		
-		//// Prerequisites ////
+		//// Prerequisites ////		
 		if (!isLoggedIn())
-			return "You need to log in first.";
+			return "You need to log in first.";		
 		if (!currentUser.hasEnoughCredits(request))
 			return "Not enough credits!";
+		
+		char[] operators = request.getOperators();		
+		addToStatistic(operators);
+		
 		if (!canBeComputed(request))
 			return "Error: Operators unsupported!";
 
 		//// Declarations ////
-		int[] operands = request.getOperands();
-		char[] operators = request.getOperators();
+		int[] operands = request.getOperands();		
 		final int totalOperatorCount = operators.length;
 		final int totalOperandCount = operands.length;
 		int remainingOperationsCount = totalOperatorCount;
 		int firstOperand = operands[0];
 		int secondOperand;
-		char nextOperator;
-
-
+		char nextOperator;	
+		
 		try {
 			while (remainingOperationsCount != 0) {
 
@@ -240,6 +244,22 @@ public class SingleClientHandler implements Runnable {
 		}
 	}
 
+	private void addToStatistic(char[] op)
+	{
+		synchronized(statistic)
+		{
+			for(Character c: op)
+			{
+				Long value = 0L;
+				if(statistic.containsKey(c))
+				{
+					value = statistic.get(c);
+				}			
+				value += 1;
+				statistic.put(c, value);
+			}
+		}
+	}
 
 	private boolean canBeComputed(ClientRequest request) {
 		String availableOperators = getAvailableOperators();
