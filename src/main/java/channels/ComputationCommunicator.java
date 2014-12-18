@@ -3,7 +3,11 @@ package channels;
 import java.io.IOException;
 
 import computation.ComputationResult;
+import computation.LogRequest;
+import computation.LogResult;
 import computation.NodeRequest;
+import computation.Request;
+import computation.Result;
 
 /**
  * Handles communication between the controller and the node
@@ -14,7 +18,7 @@ public class ComputationCommunicator{
 	
 	public ComputationCommunicator(Channel underlying) {
 		this.underlying = underlying;
-	}
+	}	
 	
 	/**
 	 * Send a computation request to the node 
@@ -24,26 +28,37 @@ public class ComputationCommunicator{
 				request.getOperand1(), request.getOperator(), request.getOperand2()));
 	}
 	
+	public void sendRequest(Request reqeust)
+	{
+		underlying.println(reqeust.toString());
+	}
+	
 
-	public void sendResult(ComputationResult result) {
+	public void sendResult(Result result) {
 		underlying.println(result.toString());
 	}
 	
 	/**
 	 * Gets the next computation request
 	 */
-	public NodeRequest getRequest() throws IOException {
+	public Request getRequest() throws IOException {
 		String message = underlying.readLine();
-		if(message != null && message.startsWith("!compute "))
-			return new NodeRequest(message.substring(9).split("\\s"));
+		if(message != null && message.startsWith("!compute "))		
+			return new NodeRequest(message.substring(9).split("\\s"));		
+		if(message != null && message.equals("!getLogs"))		
+			return new LogRequest();			
 		return null;
 	}
 	
-	public ComputationResult getResult() throws IOException {
-		return ComputationResult.fromString(underlying.readLine());
+	public Result getResult() throws IOException {
+		String response = underlying.readLine();
+		if(response.startsWith("!logs "))
+			return LogResult.fromString(response);
+		else
+			return ComputationResult.fromString(response);
 	}
 
 	public void close() {
 		underlying.close();
-	}
+	}	
 }

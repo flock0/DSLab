@@ -47,25 +47,19 @@
 
 	<target name="run-controller" depends="compile" description="Run Cloud-Controller.">
 		<java classname="controller.CloudController" fork="true" classpathref="project.classpath">
-			<arg value="controller" />
-			<jvmarg value="-Xdebug"/>
-			<jvmarg value="-Xnoagent"/>
-			<jvmarg value="-Xrunjdwp:transport=dt_socket,address=10445,server=y,suspend=n"/>
+			<arg value="controller" />			
 		</java>
 	</target>
 
 	<target name="run-admin" depends="compile" description="Run admin console">
 		<java classname="admin.AdminConsole" fork="true" classpathref="project.classpath">
-			<arg value="admin" />
-			<jvmarg value="-Xdebug"/>
-			<jvmarg value="-Xnoagent"/>
-			<jvmarg value="-Xrunjdwp:transport=dt_socket,address=10446,server=y,suspend=n"/>
+			<arg value="admin" />		
 		</java>
 	</target>
 	
 	<target name="run-node1" depends="compile" description="Run 1st Node.">
 		<java classname="node.Node" fork="true" classpathref="project.classpath">
-			<arg value="node1" />
+			<arg value="node1" />			
 		</java>
 	</target>
 

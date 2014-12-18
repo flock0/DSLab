@@ -3,7 +3,7 @@ package computation;
 /**
  * A request for computation that will be sent to a node
  */
-public class NodeRequest {
+public class NodeRequest implements Request {
 	private int operand1;
 	private int operand2;
 	private char operator;
@@ -44,7 +44,5 @@ public class NodeRequest {
 		builder.append(" ");
 		builder.append(operand2);
 		return builder.toString();
-	}
-	
-	
+	}		
 }

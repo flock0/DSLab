@@ -19,6 +19,7 @@ import channels.ComputationCommunicator;
 import channels.TcpChannel;
 import computation.ComputationResult;
 import computation.NodeRequest;
+import computation.Result;
 
 public class SingleClientHandler implements Runnable {
 
@@ -198,24 +199,28 @@ public class SingleClientHandler implements Runnable {
 							
 							currentComputationCommunicator.requestComputation(computationRequest);
 
-							ComputationResult result = currentComputationCommunicator.getResult();
-
-							//// Check Result ////
-							switch(result.getStatus()) {
-							case OK:
-								foundAvailableNode = true;
-								firstOperand = result.getNumber();
-								remainingOperationsCount--;
-
-								updateUsageStatistics(nextNodeToTry, result);
-								break;
-							case DivisionByZero:
-								deductCredits(totalOperatorCount - remainingOperationsCount + 1);
-								return "Error: division by 0";
-							case OperatorNotSupported:
-								break; // Just skip this node for now and try another one
-							default:
-								break; // Just skip this node for now and try another one
+							Result r = currentComputationCommunicator.getResult();
+							
+							if(r instanceof ComputationResult) // Otherwise just skip this node for now and try another one
+							{			
+								ComputationResult result = (ComputationResult)r;
+								//// Check Result ////
+								switch(result.getStatus()) {
+								case OK:
+									foundAvailableNode = true;
+									firstOperand = result.getNumber();
+									remainingOperationsCount--;
+	
+									updateUsageStatistics(nextNodeToTry, result);
+									break;
+								case DivisionByZero:
+									deductCredits(totalOperatorCount - remainingOperationsCount + 1);
+									return "Error: division by 0";
+								case OperatorNotSupported:
+									break; // Just skip this node for now and try another one
+								default:
+									break; // Just skip this node for now and try another one
+								}
 							}
 						} catch (SocketException e) {
 							// Just skip this node for now and try another one

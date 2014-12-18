@@ -4,11 +4,17 @@ import util.Config;
 import util.NodeLogger;
 import util.TerminableThread;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 
+import model.ComputationRequestInfo;
 import cli.Command;
 import cli.Shell;
 
@@ -56,7 +62,7 @@ public class Node implements INodeCli, Runnable {
 	}
 
 	private void initializeListener() throws IOException {
-		listener = new ComputationRequestListener(config);
+		listener = new ComputationRequestListener(config, this);
 	}
 
 	private void initializeShell() {
@@ -103,6 +109,41 @@ public class Node implements INodeCli, Runnable {
 		
 	}
 
+	public List<ComputationRequestInfo> getLogs()
+	{
+		ArrayList<ComputationRequestInfo> returnList = new ArrayList<ComputationRequestInfo>();
+		String directory = (System.getProperty("user.dir") + File.separator + config.getString("log.dir")).replace("/", File.separator);
+		File[] files = new File(directory).listFiles();		
+		if(files != null)
+		{
+			try
+			{
+				for(int i = 0; i < files.length; i++)
+				{
+					List<String> lines = Files.readAllLines(files[i].toPath(), Charset.defaultCharset());
+					if(lines.size() > 1)
+					{
+						ComputationRequestInfo info = new ComputationRequestInfo();
+						info.setNodeName(componentName);
+						info.setTerm(lines.get(0));
+						info.setResult(lines.get(1));				
+						String[] timeStampSplitted = files[i].getName().split("_");
+						if(timeStampSplitted.length == 3) //If not three => malformed => ignore file
+						{
+							info.setTimeStamp(timeStampSplitted[0] + "_" + timeStampSplitted[1]);
+							returnList.add(info);
+						}											
+					}									
+				}		
+			}
+			catch(IOException e)
+			{
+				 throw new RuntimeException("IOException during getLogs.", e);
+			}
+		}
+		return returnList;
+	}
+	
 	@Override
 	public String history(int numberOfRequests) throws IOException {
 		// TODO Auto-generated method stub

@@ -25,9 +25,11 @@ public class ComputationRequestListener extends TerminableThread {
 	private ServerSocket serverSocket = null;
 	private ExecutorService threadPool;
 	private ChannelSet openChannels;
+	private Node node;
 
-	public ComputationRequestListener(Config config) throws IOException {
+	public ComputationRequestListener(Config config, Node node) throws IOException {
 		this.config = config;
+		this.node = node;
 		openServerSocket();
 		createThreadPool();
 		openChannels = new ChannelSet();
@@ -48,7 +50,7 @@ public class ComputationRequestListener extends TerminableThread {
 				while (true) {
 					Channel nextRequest = new TcpChannel(serverSocket.accept());
 					openChannels.add(nextRequest);
-					threadPool.execute(new SingleComputationHandler(nextRequest, config));
+					threadPool.execute(new SingleComputationHandler(nextRequest, config, node));
 					openChannels.cleanUp(); // Make a semi-regular clean up
 
 				}

@@ -1,14 +1,12 @@
 package computation;
 
-
-
-public class ComputationResult {
+public class ComputationResult extends Result {
 	
-	private ResultStatus status;
+	
 	private int number;
 
 	public ComputationResult(ResultStatus status, int number) {
-		this.status = status;
+		super(status);
 		this.number = number;
 	}
 	
@@ -52,11 +50,7 @@ public class ComputationResult {
 		int number = Integer.parseInt(split[1]);
 		
 		return new ComputationResult(status, number);
-	}
-
-	public ResultStatus getStatus() {
-		return status;
-	}
+	}	
 
 	public int getNumber() {
 		return number;

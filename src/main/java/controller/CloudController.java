@@ -93,7 +93,7 @@ public class CloudController implements ICloudControllerCli, Runnable {
 	
 	private void startAdminService()
 	{		
-		adminService = new AdminService(users, statistic, config);	
+		adminService = new AdminService(config, users, statistic, allNodes);	
 	}	
 	
 

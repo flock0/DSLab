@@ -2,10 +2,9 @@ package controller;
 
 
 import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import admin.INotificationCallback;
@@ -21,14 +20,14 @@ public class User {
 	private AtomicInteger credits;
 	private String password;
 	private AtomicInteger concurrentOnlineCounter;
-	private ConcurrentHashMap<Integer, List<INotificationCallback>> notificationCallbacks;
+	private LinkedHashMap<Integer, LinkedList<INotificationCallback>> notificationCallbacks;
 	
 	public User(String username, Config config) {
 		this.username = username;
 		credits = new AtomicInteger(config.getInt(username + ".credits"));
 		password = config.getString(username + ".password");
 		concurrentOnlineCounter = new AtomicInteger(0);
-		notificationCallbacks = new ConcurrentHashMap<Integer, List<INotificationCallback>>();
+		notificationCallbacks = new LinkedHashMap<Integer, LinkedList<INotificationCallback>>();
 	}
 	
 	public int getCredits() {
@@ -36,24 +35,29 @@ public class User {
 	}
 	public void setCredits(int credits) {		
 		this.credits.set(credits);
-		for(Entry<Integer, List<INotificationCallback>> entry: notificationCallbacks.entrySet())
+		synchronized(notificationCallbacks)
 		{
-			if(entry.getKey() > credits)
+			for(Entry<Integer, LinkedList<INotificationCallback>> entry: notificationCallbacks.entrySet())
 			{
-				try
+				if(entry.getKey() > credits)
 				{
-					synchronized(entry.getValue())
+					try
 					{
-						for(INotificationCallback callback: entry.getValue())
-						{
-							callback.notify(username, entry.getKey());				
+						INotificationCallback callback = entry.getValue().poll();
+						synchronized(callback)	
+						{							
+							while(callback != null)
+							{
+								callback.notify(username, entry.getKey());	
+								callback = entry.getValue().poll();
+							}		
+							notificationCallbacks.remove(callback);
 						}
-						entry.getValue().clear();
-					}					
-				}
-				catch(RemoteException e)
-				{
-					throw new RuntimeException("Remoteexception during notify.", e);
+					}
+					catch(RemoteException e)
+					{
+						throw new RuntimeException("Remoteexception during notify.", e);
+					}
 				}
 			}
 		}
@@ -97,20 +101,20 @@ public class User {
 
 	public void addNotificationCallback(int credits,
 			INotificationCallback callback) {
-		List<INotificationCallback> callbacks;
+		LinkedList<INotificationCallback> callbacks;
 		synchronized(notificationCallbacks)
 		{
 			callbacks = notificationCallbacks.get(credits);
 			if(callbacks == null)
 			{
-				callbacks = new ArrayList<INotificationCallback>();
+				callbacks = new LinkedList<INotificationCallback>();
 				notificationCallbacks.put(credits, callbacks);
-			}			
-		}
-		
-		synchronized(callbacks)
-		{
-			callbacks.add(callback);
-		}		
+			}							
+			synchronized(callbacks)
+			{
+				callbacks.add(callback);
+			}
+		}	
+	
 	}
 }

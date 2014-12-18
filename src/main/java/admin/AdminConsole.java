@@ -2,13 +2,10 @@ package admin;
 
 import cli.Command;
 import cli.Shell;
-import controller.AdminService;
 import controller.IAdminConsole;
-import controller.Node;
 import model.ComputationRequestInfo;
 import util.Config;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.rmi.NoSuchObjectException;
@@ -19,9 +16,6 @@ import java.rmi.server.UnicastRemoteObject;
 import java.security.Key;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map.Entry;
-import java.util.Timer;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Please note that this class is not needed for Lab 1, but will later be
@@ -34,7 +28,7 @@ public class AdminConsole implements IAdminConsole, Runnable {
 	private Config config;
 	private InputStream userRequestStream;
 	private PrintStream userResponseStream;
-	private Shell shell = null;
+	private Shell shell;
 	private INotificationCallback callbackStub;
 	private NotificationCallback callback;
 	
@@ -71,7 +65,7 @@ public class AdminConsole implements IAdminConsole, Runnable {
 		}
 		catch(RemoteException e)
 		{
-			throw new RuntimeException("RemoteException during shutdown.", e);
+			throw new RuntimeException("RemoteException during initializeCallbackStub.", e);
 		}
 		
 	}
@@ -138,10 +132,18 @@ public class AdminConsole implements IAdminConsole, Runnable {
         }  
 	}
 
+	@Command
 	@Override
 	public List<ComputationRequestInfo> getLogs() throws RemoteException {
-		// TODO Auto-generated method stub
-		return null;
+		try
+		{
+			Registry registry = LocateRegistry.getRegistry(config.getString("controller.host"), config.getInt("controller.rmi.port"));
+		    IAdminConsole comp = (IAdminConsole) registry.lookup(config.getString("binding.name"));
+		    return comp.getLogs();
+	    } catch (Exception e) {
+      	    throw new RuntimeException("Exception during getLogs.", e);
+        }  
+	    
 	}
 
 	@Command
