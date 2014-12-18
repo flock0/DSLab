@@ -53,13 +53,17 @@ public class User {
 							{
 								callback.notify(username, entry.getKey());	
 								callback = entry.getValue().poll();
-							}	
-							iterator.remove();						}
+							}							
+						}
 					}
 					catch(RemoteException e)
 					{
 						//Log somewhere...
 						//throw new RuntimeException("Remoteexception during notify.", e);
+					}
+					finally
+					{
+						iterator.remove();						
 					}
 				}
 			}			
