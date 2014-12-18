@@ -65,7 +65,8 @@ public class AdminConsole implements IAdminConsole, Runnable {
 		}
 		catch(RemoteException e)
 		{
-			throw new RuntimeException("RemoteException during initializeCallbackStub.", e);
+			//Log somewhere...
+			//throw new RuntimeException("RemoteException during initializeCallbackStub.", e);
 		}
 		
 	}
@@ -81,7 +82,8 @@ public class AdminConsole implements IAdminConsole, Runnable {
 			}
 			catch(NoSuchObjectException e)
 			{
-				throw new RuntimeException("NoSuchObjectException during shutdown.", e);
+				//Log somewhere...
+				//throw new RuntimeException("NoSuchObjectException during shutdown.", e);
 			}
 		}
 	}

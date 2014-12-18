@@ -53,7 +53,8 @@ public class AdminService implements IAdminConsole {
             remote = (IAdminConsole) UnicastRemoteObject.exportObject(this, 0);            
             registry.rebind(config.getString("binding.name"), remote);    
         } catch (RemoteException e) {            
-            throw new RuntimeException("Error while starting AdminService.", e);
+        	//Log somewhere...
+        	//throw new RuntimeException("Error while starting AdminService.", e);
         } 
 	}
 	
@@ -107,12 +108,14 @@ public class AdminService implements IAdminConsole {
 						else
 						{
 							synchronized(channelSet) {channelSet.cleanUp();}
-							throw new RuntimeException("Failed to gather Node logs (wrong resulttype).");
+							//Log somewhere...
+							//throw new RuntimeException("Failed to gather Node logs (wrong resulttype).");
 						}
 						break;					
 					default: // Something went wrong
 						synchronized(channelSet) {channelSet.cleanUp();}
-						throw new RuntimeException("Failed to gather Node logs (wrong status).");
+						//Log somewhere...
+						//throw new RuntimeException("Failed to gather Node logs (wrong status).");
 					}					
 				} catch (SocketException e) {
 					//Ignore Node

@@ -2,6 +2,7 @@ package controller;
 
 
 import java.rmi.RemoteException;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map.Entry;
@@ -37,8 +38,10 @@ public class User {
 		this.credits.set(credits);
 		synchronized(notificationCallbacks)
 		{
-			for(Entry<Integer, LinkedList<INotificationCallback>> entry: notificationCallbacks.entrySet())
+			Iterator<Entry<Integer, LinkedList<INotificationCallback>>> iterator = notificationCallbacks.entrySet().iterator();
+			while(iterator.hasNext())
 			{
+				Entry<Integer, LinkedList<INotificationCallback>> entry = iterator.next();
 				if(entry.getKey() > credits)
 				{
 					try
@@ -50,16 +53,16 @@ public class User {
 							{
 								callback.notify(username, entry.getKey());	
 								callback = entry.getValue().poll();
-							}		
-							notificationCallbacks.remove(callback);
-						}
+							}	
+							iterator.remove();						}
 					}
 					catch(RemoteException e)
 					{
-						throw new RuntimeException("Remoteexception during notify.", e);
+						//Log somewhere...
+						//throw new RuntimeException("Remoteexception during notify.", e);
 					}
 				}
-			}
+			}			
 		}
 	}
 	public String getUsername() {
