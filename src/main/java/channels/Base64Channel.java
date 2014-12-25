@@ -10,19 +10,32 @@ import org.bouncycastle.util.encoders.Base64;
 public class Base64Channel extends ChannelDecorator {
 
 	public Base64Channel(Channel underlying) {
-		super(underlying);
+		this.underlying = underlying;
 	}
 
 	@Override
-	public String readLine() throws IOException {
-		byte[] decoded = Base64.decode(super.readLine());
-		return decoded.toString();
+	public String readStringLine() throws IOException {
+		byte[] decoded = Base64.decode(underlying.readStringLine());
+		return new String(decoded);
 	}
 
 	@Override
 	public void println(String out) {
 		byte[] encoded = Base64.encode(out.getBytes());
 		super.println(encoded.toString());
+	}
+
+	@Override
+	public byte[] readByteLine() throws IOException {
+		byte[] decoded = Base64.decode(underlying.readStringLine());
+		return decoded;
+	}
+
+	@Override
+	public void println(byte[] out) {
+		byte[] encoded = Base64.encode(out);
+		super.println(encoded.toString());
+		
 	}
 	
 }

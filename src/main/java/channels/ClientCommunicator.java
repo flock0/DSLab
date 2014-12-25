@@ -19,7 +19,7 @@ public class ClientCommunicator {
 	}
 	
 	public ClientRequest getRequest() throws IOException {
-		String message = underlying.readLine();
+		String message = underlying.readStringLine();
 		
 		String[] split = message.split("\\s");
 		

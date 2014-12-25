@@ -34,7 +34,7 @@ public class TcpChannel implements Channel {
 	}
 
 	@Override
-	public String readLine() throws IOException {
+	public String readStringLine() throws IOException {
 		String message = reader.readLine();
 		if(message == null)
 			throw new SocketException("socket closed");
@@ -43,8 +43,23 @@ public class TcpChannel implements Channel {
 	}
 
 	@Override
+	public byte[] readByteLine() throws IOException {
+		String message = reader.readLine();
+		if(message == null)
+			throw new SocketException("socket closed");
+		else
+			return message.getBytes();
+	}
+
+	@Override
 	public void println(String out) {
 		writer.println(out);
+	}
+
+	@Override
+	public void println(byte[] out) {
+		writer.print(out);
+		
 	}
 
 	@Override

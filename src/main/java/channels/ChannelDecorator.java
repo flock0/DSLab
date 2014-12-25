@@ -6,13 +6,13 @@ public abstract class ChannelDecorator implements Channel {
 
 	protected Channel underlying;
 	
-	public ChannelDecorator(Channel underlying) {
-		this.underlying = underlying;
+	@Override
+	public String readStringLine() throws IOException {
+		return underlying.readStringLine();
 	}
 	
-	@Override
-	public String readLine() throws IOException {
-		return underlying.readLine();
+	public byte[] readByteLine() throws IOException {
+		return underlying.readByteLine();
 	}
 
 	@Override
@@ -21,6 +21,10 @@ public abstract class ChannelDecorator implements Channel {
 
 	}
 
+	public void println(byte[] out) {
+		underlying.println(out);
+	}
+	
 	@Override
 	public void close() {
 		underlying.close();
