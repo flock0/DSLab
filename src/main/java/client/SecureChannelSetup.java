@@ -15,6 +15,7 @@ import javax.crypto.NoSuchPaddingException;
 import org.bouncycastle.util.encoders.Base64;
 
 import channels.AESChannel;
+import channels.Base64Channel;
 import channels.Channel;
 
 
@@ -36,7 +37,7 @@ public class SecureChannelSetup {
 	private boolean successfullyInitialized = false;
 	
 	public SecureChannelSetup(Channel channel, PrivateKey privKey, PublicKey pubKey) {
-		this.channel = channel;
+		this.channel = new Base64Channel(channel);
 		this.privKey = privKey;
 		this.pubKey = pubKey;
 		randomNumberGenerator = new SecureRandom();

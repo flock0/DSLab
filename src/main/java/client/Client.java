@@ -69,7 +69,7 @@ public class Client implements IClientCli, Runnable {
 	}
 
 	private void initializeSocket() throws UnknownHostException, IOException {
-		underlyingChannel = channel = new Base64Channel(new TcpChannel(new Socket(config.getString("controller.host"), config.getInt("controller.tcp.port"))));
+		underlyingChannel = channel = new TcpChannel(new Socket(config.getString("controller.host"), config.getInt("controller.tcp.port")));
 	}
 
 	private void initializeShell() {
@@ -166,7 +166,7 @@ public class Client implements IClientCli, Runnable {
 	public String authenticate(String username) throws IOException {
 		if(!authenticated) {
 			PrivateKey userPrivateKey = loadUserPrivateKey(username);
-			SecureChannelSetup auth = new SecureChannelSetup(new Base64Channel(channel), userPrivateKey, controllerPublicKey);
+			SecureChannelSetup auth = new SecureChannelSetup(channel, userPrivateKey, controllerPublicKey);
 			Channel aesChannel = auth.authenticate(username);
 			if(aesChannel == null)
 				return "Authentication error!";

@@ -3,7 +3,6 @@ package channels;
 import java.io.IOException;
 
 import computation.ComputationRequestType;
-
 import controller.ClientRequest;
 
 /**
@@ -36,6 +35,8 @@ public class ClientCommunicator {
 			return validateList(split);
 		case "!compute":
 			return validateCompute(split);
+		case "!authenticate":
+			return validateAuthenticate(split);
 		default:
 			underlying.println("Error: Unknown command");
 			ClientRequest request = new ClientRequest();
@@ -131,6 +132,14 @@ public class ClientCommunicator {
 		return request;
 	}
 	
+	private ClientRequest validateAuthenticate(String[] split) {
+		//An dieser Stelle sind wir auf jeden Fall schon authentifiziert. Der Befehl ist also unnötig
+		ClientRequest request = new ClientRequest();
+		request.setType(ComputationRequestType.Invalid);
+		underlying.println("Already authenticated");
+		return request;
+	}
+
 	private boolean isInteger(String s) {
 		try {
 			Integer.parseInt(s);
