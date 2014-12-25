@@ -16,6 +16,7 @@ import channels.Channel;
 import channels.TcpChannel;
 import cli.Command;
 import cli.Shell;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import util.Config;
 import util.Keys;
 
@@ -25,10 +26,12 @@ public class Client implements IClientCli, Runnable {
 	private Config config;
 	private InputStream userRequestStream;
 	private PrintStream userResponseStream;
-	private Channel channel = null;
+	private Channel underlyingChannel = null; // The original underlying channel
+	private Channel channel = null; // The channel that may be decorated during a session with i.e. AES encryption
 	private Shell shell;
 	private PublicKey controllerKey;
 	private boolean successfullyInitialized = false;
+	private boolean authenticated = false;
 
 	/**
 	 * @param componentName
@@ -66,7 +69,7 @@ public class Client implements IClientCli, Runnable {
 	}
 
 	private void initializeSocket() throws UnknownHostException, IOException {
-		channel = new Base64Channel(new TcpChannel(new Socket(config.getString("controller.host"), config.getInt("controller.tcp.port"))));
+		underlyingChannel = channel = new Base64Channel(new TcpChannel(new Socket(config.getString("controller.host"), config.getInt("controller.tcp.port"))));
 	}
 
 	private void initializeShell() {
@@ -85,43 +88,60 @@ public class Client implements IClientCli, Runnable {
 	@Override
 	@Command
 	public String login(String username, String password) throws IOException {
-		channel.println(String.format("!login %s %s", username, password));
-		return channel.readStringLine();
+		throw new UnsupportedOperationException("!login command not used in lab 2. Use !authenticate <username>");
 	}
 
 	@Override
 	@Command
 	public String logout() throws IOException {
-		channel.println("!logout");
-		return channel.readStringLine();
+		if(authenticated) {
+			authenticated = false;
+			channel.println("!logout");
+			String response = channel.readStringLine();
+			channel = underlyingChannel;
+			return response;
+		} else
+			return "Currently not logged in. Please !authenticate first";
 	}
 
 	@Override
 	@Command
 	public String credits() throws IOException {
-		channel.println("!credits");
-		return channel.readStringLine();
+		if(authenticated) {
+			channel.println("!credits");
+			return channel.readStringLine();
+		} else
+			return "Currently not logged in. Please !authenticate first";
 	}
 
 	@Override
 	@Command
 	public String buy(long credits) throws IOException {
+		if(authenticated) {
 		channel.println(String.format("!buy %d", credits));
 		return channel.readStringLine();
+		} else
+			return "Currently not logged in. Please !authenticate first";
 	}
 
 	@Override
 	@Command
 	public String list() throws IOException {
-		channel.println("!list");
-		return channel.readStringLine();
+		if(authenticated) {
+			channel.println("!list");
+			return channel.readStringLine();
+		} else
+			return "Currently not logged in. Please !authenticate first";
 	}
 
 	@Override
 	@Command
 	public String compute(String term) throws IOException {
-		channel.println(String.format("!compute %s", term));
-		return channel.readStringLine();
+		if(authenticated) {
+			channel.println(String.format("!compute %s", term));
+			return channel.readStringLine();
+		} else
+			return "Currently not logged in. Please !authenticate first";
 	}
 
 	@Override
@@ -144,9 +164,19 @@ public class Client implements IClientCli, Runnable {
 
 	@Override
 	public String authenticate(String username) throws IOException {
-		PrivateKey userPrivateKey = loadUserPrivateKey(username);
-		SecureChannelSetup auth = new SecureChannelSetup(channel, userPrivateKey, controllerKey);
-		return null; //TODO: auth durchführen, null nur temporär
+		if(!authenticated) {
+			PrivateKey userPrivateKey = loadUserPrivateKey(username);
+			SecureChannelSetup auth = new SecureChannelSetup(new Base64Channel(channel), userPrivateKey, controllerKey);
+			Channel aesChannel = auth.authenticate(username);
+			if(aesChannel == null)
+				return "Authentication error!";
+			else {
+				authenticated = true;
+				channel = aesChannel;
+				return "Successfully logged in as " + username;
+			}
+		} else
+			return "Currently already logged in. Please !logout first";
 	}
 
 	private PrivateKey loadUserPrivateKey(String username) throws IOException {

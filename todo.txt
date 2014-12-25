@@ -4,19 +4,23 @@ TODO-Liste:
     + !authenticate-Message akzeptieren und verarbeiten.
     + Public Key vom Controller laden (util.keys verwenden).
     + Private Key laden (util.keys verwenden).
-    - Bei nicht-existieren Fehlermeldung.
-    - Aufpassen, dass sonst keine Commands erlaubt sind.
+    + Bei nicht-existieren Fehlermeldung.
+    + Aufpassen, dass sonst keine Commands erlaubt sind.
+	+ AESChannel in Client öffnen
     + Authentication-Challenge verschicken.
-    - Vermeiden, dass man sich öfters als 1 mal authentifiziert.
-    - !login ist nicht mehr gefordert.
+    + Vermeiden, dass man sich öfters als 1 mal authentifiziert.
+    + !login ist nicht mehr gefordert.
     + Fehlerhaftes Protokoll abfangen (Falsche Parameter in Messages)
+	+ An SecureChannel einen Base64-Channel übergeben
   - Cloud Controller Behaviour:
     - Private Key beim Starten einlesen
     - Bei Eintreffen eines Requests:
     - Nur RSA verschlüsselte Requests sind erlaubt (Annahme, gibt es dazu einen Foreneintrag?).
     - Private Key des entsprechenden Users laden.
     - User ist erst online, wenn die Authentifizierung abgeschlossen ist.
+	- Aufpassen, falls nicht-verschlüsselte Messages kommen.
     - Aufpassen, falls mitten in der Session nicht-verschlüsselte Messages kommen.
+	- An SecureChannel einen Base64-Channel übergeben
   - Authentication Algorithm:
     - Message-Austausch wie in der Angabe beschrieben:
     + 1. RSA-verschlüsseltes !authenticate
