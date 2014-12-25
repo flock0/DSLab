@@ -29,7 +29,7 @@ public class Client implements IClientCli, Runnable {
 	private Channel underlyingChannel = null; // The original underlying channel
 	private Channel channel = null; // The channel that may be decorated during a session with i.e. AES encryption
 	private Shell shell;
-	private PublicKey controllerKey;
+	private PublicKey controllerPublicKey;
 	private boolean successfullyInitialized = false;
 	private boolean authenticated = false;
 
@@ -65,7 +65,7 @@ public class Client implements IClientCli, Runnable {
 	private void loadControllerPublicKey() throws IOException {
 		String filePath = System.getProperty("user.dir") + File.separator + config.getString("controller.key");
 		filePath = filePath.replace("/", File.separator);
-		controllerKey = Keys.readPublicPEM(new File(filePath));
+		controllerPublicKey = Keys.readPublicPEM(new File(filePath));
 	}
 
 	private void initializeSocket() throws UnknownHostException, IOException {
@@ -166,7 +166,7 @@ public class Client implements IClientCli, Runnable {
 	public String authenticate(String username) throws IOException {
 		if(!authenticated) {
 			PrivateKey userPrivateKey = loadUserPrivateKey(username);
-			SecureChannelSetup auth = new SecureChannelSetup(new Base64Channel(channel), userPrivateKey, controllerKey);
+			SecureChannelSetup auth = new SecureChannelSetup(new Base64Channel(channel), userPrivateKey, controllerPublicKey);
 			Channel aesChannel = auth.authenticate(username);
 			if(aesChannel == null)
 				return "Authentication error!";
