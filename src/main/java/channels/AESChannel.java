@@ -29,7 +29,7 @@ public class AESChannel extends ChannelDecorator {
 		try {
 			aesCipher.init(Cipher.DECRYPT_MODE, key, initializationVector);
 			byte[] clearText = aesCipher.doFinal(underlying.readByteLine());
-			return clearText.toString();
+			return new String(clearText);
 		} catch (Exception e) {
 			throw new IOException("Couldn't decrypt with AES: " +  e.getMessage(), e);
 		}

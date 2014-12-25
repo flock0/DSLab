@@ -54,25 +54,33 @@ public class SecureChannelSetup {
 		rsaCipher = Cipher.getInstance(RSA_CIPHER_STRING);
 	}
 
+	/**
+	 * Authenticates a client with the given username
+	 * @param username The username to authenticate with the controller
+	 * @return A valid AESChannel to communicate with the controller
+	 */
 	public Channel authenticate(String username) throws IOException {
-		try {
-		
-		clientChallenge = createClientChallenge();
-		sendAuthenticationRequest(username, clientChallenge);
-		String plainAnswer = receiveAuthenticationAnswer();
-		if(answerIsValid(plainAnswer, clientChallenge)) {
-			String[] splitAnswer = plainAnswer.split("\\s"); 
-			Channel aesChannel = setupAES(splitAnswer);
-			sendAuthenticationAnswer(aesChannel, splitAnswer);
-			
-		} else {
-			channel.close();
+		if(successfullyInitialized) {
+			try {
+				Channel aesChannel = null;
+				clientChallenge = createClientChallenge();
+				sendAuthenticationRequest(username, clientChallenge);
+				String plainAnswer = receiveAuthenticationAnswer();
+				if(answerIsValid(plainAnswer, clientChallenge)) {
+					String[] splitAnswer = plainAnswer.split("\\s"); 
+					aesChannel = setupAES(splitAnswer);
+					sendAuthenticationAnswer(aesChannel, splitAnswer);
+
+				} else {
+					channel.close();
+				}
+				return aesChannel;
+			} catch(Exception e) {
+				channel.close();
+				throw new IOException("Couldn't authenticate user: " + e.getMessage(), e);
+			}
 		}
-		return channel;
-		} catch(Exception e) {
-			channel.close();
-			throw new IOException("Couldn't authenticate user: " + e.getMessage(), e);
-		}
+		throw new IOException("Authentication failed: Couldn't initialize secure channel!");
 	}
 	
 	private byte[] createClientChallenge() {
