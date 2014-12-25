@@ -3,12 +3,14 @@ package controller;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
+import java.security.PrivateKey;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
+import client.SecureChannelSetup;
 import util.Config;
 import util.FixedParameters;
 import channels.Channel;
@@ -16,7 +18,6 @@ import channels.ChannelSet;
 import channels.ClientCommunicator;
 import channels.ComputationCommunicator;
 import channels.TcpChannel;
-
 import computation.ComputationResult;
 import computation.NodeRequest;
 
@@ -30,17 +31,24 @@ public class SingleClientHandler implements Runnable {
 	private ComputationCommunicator currentComputationCommunicator = null;
 	private boolean sessionIsBeingTerminated = false;
 	private ChannelSet openChannels;
+	private PrivateKey controllerPrivateKey;
 
 	public SingleClientHandler(
 			Channel channel,
 			ConcurrentHashMap<Character, ConcurrentSkipListSet<Node>> activeNodes,
-			ConcurrentHashMap<String, User> users, ChannelSet openChannels, Config config) {
+			ConcurrentHashMap<String, User> users, PrivateKey controllerPrivateKey, ChannelSet openChannels, Config config) {
 		this.config = config;
 		this.activeNodes = activeNodes;
 		this.users = users;
+		this.controllerPrivateKey = controllerPrivateKey;
 		this.openChannels = openChannels;
+		
 
-		this.communicator = new ClientCommunicator(channel);
+		//TODO
+//		
+//		SecureChannelSetup auth = new SecureChannelSetup(channel, controllerPrivateKey);
+//		Channel aesChannel = auth.awaitAuthentication();
+//		this.communicator = new ClientCommunicator(aesChannel);
 	}
 
 	@Override

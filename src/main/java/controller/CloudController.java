@@ -1,9 +1,13 @@
 package controller;
 
 import util.Config;
+import util.Keys;
+
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.security.PrivateKey;
 import java.util.Timer;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -25,6 +29,7 @@ public class CloudController implements ICloudControllerCli, Runnable {
 	private AliveListener aliveListener = null;
 	private ClientListener clientListener = null;
 	private boolean successfullyInitialized = false;
+	private PrivateKey controllerPrivateKey;
 	
 
 	/**
@@ -47,14 +52,21 @@ public class CloudController implements ICloudControllerCli, Runnable {
 		try {
 			nodePurgeTimer = new Timer();
 			Node.TimeoutPeriod = config.getInt("node.timeout");
+			loadControllerPrivateKey();
 			loadUsers();
 			initializeNodeMaps();
 			initializeListeners();
 			initializeShell();
 			successfullyInitialized = true;
 		} catch (IOException e) {
-			System.out.println("Couldn't create socket: " + e.getMessage());
+			System.out.println("Couldn't initialize controller: " + e.getMessage());
 		}
+	}
+
+	private void loadControllerPrivateKey() throws IOException {
+		String filePath = System.getProperty("user.dir") + File.separator + config.getString("key");
+		filePath = filePath.replace("/", File.separator);
+		controllerPrivateKey = Keys.readPrivatePEM(new File(filePath));		
 	}
 
 	private void loadUsers() {

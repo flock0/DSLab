@@ -52,7 +52,7 @@ public class ClientListener extends TerminableThread {
 		if (serverSocket != null) {
 			try {
 				while (true) {
-					Channel nextRequest = new Base64Channel(new TcpChannel(serverSocket.accept()));
+					Channel nextRequest = new TcpChannel(serverSocket.accept());
 					openChannels.add(nextRequest);
 					threadPool.execute(new SingleClientHandler(nextRequest, activeNodes, users, openChannels, config));					
 					openChannels.cleanUp(); // Make a semi-regular clean up
