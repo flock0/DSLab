@@ -33,14 +33,14 @@ public class ComputationCommunicator{
 	 * Gets the next computation request
 	 */
 	public NodeRequest getRequest() throws IOException {
-		String message = underlying.readLine();
+		String message = underlying.readStringLine();
 		if(message != null && message.startsWith("!compute "))
 			return new NodeRequest(message.substring(9).split("\\s"));
 		return null;
 	}
 	
 	public ComputationResult getResult() throws IOException {
-		return ComputationResult.fromString(underlying.readLine());
+		return ComputationResult.fromString(underlying.readStringLine());
 	}
 
 	public void close() {

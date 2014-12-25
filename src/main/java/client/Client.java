@@ -7,11 +7,9 @@ import java.io.PrintStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-import org.bouncycastle.util.encoders.Base64;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.SecureRandom;
 
 import channels.Base64Channel;
 import channels.Channel;
@@ -88,42 +86,42 @@ public class Client implements IClientCli, Runnable {
 	@Command
 	public String login(String username, String password) throws IOException {
 		channel.println(String.format("!login %s %s", username, password));
-		return channel.readLine();
+		return channel.readStringLine();
 	}
 
 	@Override
 	@Command
 	public String logout() throws IOException {
 		channel.println("!logout");
-		return channel.readLine();
+		return channel.readStringLine();
 	}
 
 	@Override
 	@Command
 	public String credits() throws IOException {
 		channel.println("!credits");
-		return channel.readLine();
+		return channel.readStringLine();
 	}
 
 	@Override
 	@Command
 	public String buy(long credits) throws IOException {
 		channel.println(String.format("!buy %d", credits));
-		return channel.readLine();
+		return channel.readStringLine();
 	}
 
 	@Override
 	@Command
 	public String list() throws IOException {
 		channel.println("!list");
-		return channel.readLine();
+		return channel.readStringLine();
 	}
 
 	@Override
 	@Command
 	public String compute(String term) throws IOException {
 		channel.println(String.format("!compute %s", term));
-		return channel.readLine();
+		return channel.readStringLine();
 	}
 
 	@Override

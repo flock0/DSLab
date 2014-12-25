@@ -14,6 +14,7 @@ import javax.crypto.NoSuchPaddingException;
 
 import org.bouncycastle.util.encoders.Base64;
 
+import channels.AESChannel;
 import channels.Channel;
 
 
@@ -53,23 +54,27 @@ public class SecureChannelSetup {
 		rsaCipher = Cipher.getInstance(RSA_CIPHER_STRING);
 	}
 
-	public Channel authenticate(String username) throws InvalidKeyException, IllegalBlockSizeException, BadPaddingException, IOException {
+	public Channel authenticate(String username) throws IOException {
+		try {
+		
 		clientChallenge = createClientChallenge();
 		sendAuthenticationRequest(username, clientChallenge);
 		String plainAnswer = receiveAuthenticationAnswer();
 		if(answerIsValid(plainAnswer, clientChallenge)) {
-			setupAES(plainAnswer);
+			String[] splitAnswer = plainAnswer.split("\\s"); 
+			Channel aesChannel = setupAES(splitAnswer);
+			sendAuthenticationAnswer(aesChannel, splitAnswer);
+			
 		} else {
-			//TODO: closeChannel();
+			channel.close();
 		}
-		return null; //TODO: Temporär
+		return channel;
+		} catch(Exception e) {
+			channel.close();
+			throw new IOException("Couldn't authenticate user: " + e.getMessage(), e);
+		}
 	}
 	
-	private void setupAES(String plainAnswer) {
-		//TODO: AES aufsetzen und zurückliefern an Caller
-		
-	}
-
 	private byte[] createClientChallenge() {
 		final byte[] clientChallenge = new byte[CHALLENGE_LENGTH_IN_BYTES];
 		randomNumberGenerator.nextBytes(clientChallenge);
@@ -86,11 +91,20 @@ public class SecureChannelSetup {
 
 	private String receiveAuthenticationAnswer() throws InvalidKeyException, IOException, IllegalBlockSizeException, BadPaddingException {
 		rsaCipher.init(Cipher.DECRYPT_MODE, privKey);
-		String encryptedAnswer = channel.readLine();
+		String encryptedAnswer = channel.readStringLine();
 		return new String(rsaCipher.doFinal(encryptedAnswer.getBytes()));		
 	}
 
+	private Channel setupAES(String[] splitAnswer) throws NoSuchAlgorithmException, NoSuchPaddingException {
+		byte[] aesKey = getAESKey(splitAnswer);
+		byte[] aesInitializationVector = getAESIV(splitAnswer);
+		
+		return new AESChannel(channel, aesKey, aesInitializationVector, AES_CIPHER_STRING);
+	}
+
 	private boolean answerIsValid(String message, byte[] clientChallenge) {
+		if(message == null)
+			return false;
 		String[] split = message.split("\\s");
 		if(split.length != 5)
 			return false;
@@ -99,5 +113,17 @@ public class SecureChannelSetup {
 		if(!Base64.encode(clientChallenge).equals(split[1]))
 			return false;
 		return true;
+	}
+
+	private byte[] getAESIV(String[] splitAnswer) {
+		return Base64.decode(splitAnswer[3]);
+	}
+
+	private byte[] getAESKey(String[] splitAnswer) {
+		return Base64.decode(splitAnswer[4]);
+	}
+
+	private void sendAuthenticationAnswer(Channel aesChannel, String[] splitAnswer) {
+		aesChannel.println(splitAnswer[2]);
 	}
 }
