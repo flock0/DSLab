@@ -19,6 +19,7 @@ import cli.Shell;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import util.Config;
 import util.Keys;
+import util.SecureChannelSetup;
 
 public class Client implements IClientCli, Runnable {
 

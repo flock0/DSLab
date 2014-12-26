@@ -1,4 +1,4 @@
-package client;
+package util;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,8 +15,6 @@ import javax.crypto.NoSuchPaddingException;
 
 import org.bouncycastle.util.encoders.Base64;
 
-import util.Config;
-import util.Keys;
 import channels.AESChannel;
 import channels.Base64Channel;
 import channels.Channel;
