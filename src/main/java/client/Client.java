@@ -20,6 +20,7 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import util.Config;
 import util.Keys;
 import util.SecureChannelSetup;
+import util.SecurityUtils;
 
 public class Client implements IClientCli, Runnable {
 
@@ -52,6 +53,7 @@ public class Client implements IClientCli, Runnable {
 		this.userResponseStream = userResponseStream;		
 		
 		try {
+			SecurityUtils.registerBouncyCastle();
 			loadControllerPublicKey();
 			initializeSocket();
 			initializeShell();

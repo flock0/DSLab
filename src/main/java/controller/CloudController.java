@@ -2,6 +2,7 @@ package controller;
 
 import util.Config;
 import util.Keys;
+import util.SecurityUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -52,6 +53,7 @@ public class CloudController implements ICloudControllerCli, Runnable {
 		try {
 			nodePurgeTimer = new Timer();
 			Node.TimeoutPeriod = config.getInt("node.timeout");
+			SecurityUtils.registerBouncyCastle();
 			loadControllerPrivateKey();
 			loadUsers();
 			initializeNodeMaps();
