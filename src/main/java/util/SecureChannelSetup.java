@@ -106,7 +106,7 @@ public class SecureChannelSetup {
 	}
 
 	private void sendAuthenticationRequest(String username, byte[] clientChallenge) throws IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
-		String encodedClientChallenge = Base64.encode(clientChallenge).toString();
+		String encodedClientChallenge = new String(Base64.encode(clientChallenge));
 		String request = String.format("!authenticate %s %s", username, encodedClientChallenge);
 		rsaCipher.init(Cipher.ENCRYPT_MODE, pubKey);
 		byte[] cipherText = rsaCipher.doFinal(request.getBytes());

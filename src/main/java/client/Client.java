@@ -165,6 +165,7 @@ public class Client implements IClientCli, Runnable {
 		new Thread(client).start();
 	}
 
+	@Command
 	@Override
 	public String authenticate(String username) throws IOException {
 		if(!authenticated) {
