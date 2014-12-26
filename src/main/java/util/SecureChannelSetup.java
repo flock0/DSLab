@@ -44,9 +44,10 @@ public class SecureChannelSetup {
 	private byte[] clientChallenge;
 	private boolean successfullyInitialized = false;
 	
-	public SecureChannelSetup(Channel channel, PrivateKey privKey) {
+	public SecureChannelSetup(Channel channel, PrivateKey privKey, Config config) {
 		this.channel = new Base64Channel(channel);
 		this.privKey = privKey;
+		this.config = config;
 		randomNumberGenerator = new SecureRandom();
 		
 		try {
@@ -57,8 +58,8 @@ public class SecureChannelSetup {
 		}
 	}
 
-	public SecureChannelSetup(Channel channel, PrivateKey privKey, PublicKey pubKey) {
-		this(channel, privKey);
+	public SecureChannelSetup(Channel channel, PrivateKey privKey, PublicKey pubKey, Config config) {
+		this(channel, privKey, config);
 		this.pubKey = pubKey;
 	}
 

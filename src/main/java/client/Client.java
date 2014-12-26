@@ -170,7 +170,7 @@ public class Client implements IClientCli, Runnable {
 	public String authenticate(String username) throws IOException {
 		if(!authenticated) {
 			PrivateKey userPrivateKey = loadUserPrivateKey(username);
-			SecureChannelSetup auth = new SecureChannelSetup(channel, userPrivateKey, controllerPublicKey);
+			SecureChannelSetup auth = new SecureChannelSetup(channel, userPrivateKey, controllerPublicKey, config);
 			Channel aesChannel = auth.authenticate(username);
 			if(aesChannel == null)
 				return "Authentication error!";

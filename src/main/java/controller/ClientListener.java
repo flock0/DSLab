@@ -31,7 +31,7 @@ public class ClientListener extends TerminableThread {
 	private PrivateKey controllerPrivateKey = null;
 	private ChannelSet openChannels; // Keeps track of all open channels for clients or nodes. Used for shutdown 
 
-	public ClientListener(ConcurrentHashMap<String, User> users, ConcurrentHashMap<Character, ConcurrentSkipListSet<Node>> activeNodes, PrivateKey controllerPrivateKey2, Config config) throws IOException {
+	public ClientListener(ConcurrentHashMap<String, User> users, ConcurrentHashMap<Character, ConcurrentSkipListSet<Node>> activeNodes, PrivateKey controllerPrivateKey, Config config) throws IOException {
 		this.users = users;
 		this.activeNodes = activeNodes;
 		this.config = config;

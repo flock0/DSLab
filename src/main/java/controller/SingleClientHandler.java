@@ -46,7 +46,7 @@ public class SingleClientHandler implements Runnable {
 		this.openChannels = openChannels;
 		
 		try {
-			SecureChannelSetup auth = new SecureChannelSetup(channel, controllerPrivateKey);
+			SecureChannelSetup auth = new SecureChannelSetup(channel, controllerPrivateKey, config);
 			Channel aesChannel = auth.awaitAuthentication();
 			this.communicator = new ClientCommunicator(aesChannel);
 			currentUser = users.get(auth.getAuthenticatedUser());
