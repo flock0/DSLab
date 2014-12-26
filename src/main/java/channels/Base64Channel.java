@@ -22,7 +22,7 @@ public class Base64Channel extends ChannelDecorator {
 	@Override
 	public void println(String out) {
 		byte[] encoded = Base64.encode(out.getBytes());
-		super.println(new String(encoded));
+		underlying.println(new String(encoded));
 	}
 
 	@Override
@@ -34,7 +34,7 @@ public class Base64Channel extends ChannelDecorator {
 	@Override
 	public void println(byte[] out) {
 		byte[] encoded = Base64.encode(out);
-		super.println(new String(encoded));
+		underlying.println(new String(encoded));
 		
 	}
 	
