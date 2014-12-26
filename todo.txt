@@ -20,7 +20,8 @@ TODO-Liste:
     + User ist erst online, wenn die Authentifizierung abgeschlossen ist.
 	- Aufpassen, falls nicht-verschlüsselte Messages kommen.
     - Aufpassen, falls mitten in der Session nicht-verschlüsselte Messages kommen.
-	- An SecureChannel einen Base64-Channel übergeben
+	+ An SecureChannel einen Base64-Channel übergeben
+	- BUG: Response auf !ok kommt nicht an, da Socket geclosed. Client debuggen!
 	- Commands vom CloudController durchgehen und anpassen.
 	- Was tun, wenn die erste oder dritte Nachricht vom Client ungültig ist? Derzeit wird null zurückgegeben. Besser machen!
   - Authentication Algorithm:
