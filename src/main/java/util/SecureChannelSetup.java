@@ -11,7 +11,10 @@ import java.security.SecureRandom;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 
 import org.bouncycastle.util.encoders.Base64;
 
@@ -29,7 +32,7 @@ public class SecureChannelSetup {
 	private static final int CHALLENGE_LENGTH_IN_BYTES = 32;
 	private static final String RSA_CIPHER_STRING = "RSA/NONE/OAEPWithSHA256AndMGF1Padding";
 	private static final String AES_CIPHER_STRING = "AES/CTR/NoPadding";
-	private static final int AES_KEY_LENGTH_IN_BYTES = 32;
+	private static final int AES_KEY_LENGTH_IN_BITS = 256;
 	private static final int AES_IV_LENGTH_IN_BYTES = 16;
 	private Cipher rsaCipher;
 	private SecureRandom randomNumberGenerator;
@@ -120,7 +123,7 @@ public class SecureChannelSetup {
 		byte[] aesKey = getAESKey(splitAnswer);
 		byte[] aesIV = getAESIV(splitAnswer);
 		
-		return new AESChannel(channel, aesKey, aesIV, AES_CIPHER_STRING);
+		return new AESChannel(channel, new SecretKeySpec(aesKey, AES_CIPHER_STRING), aesIV, AES_CIPHER_STRING);
 	}
 
 	private boolean answerIsValid(String message, byte[] clientChallenge) {
@@ -156,7 +159,9 @@ public class SecureChannelSetup {
 				if(requestIsValid(splitRequest)) {
 					PublicKey userPublicKey = loadUserPublicKey(splitRequest[1]);
 					byte[] controllerChallenge = createChallenge();
-					byte[] aesKey = getRandomBytes(AES_KEY_LENGTH_IN_BYTES);
+					KeyGenerator aesKeyGen = KeyGenerator.getInstance(AES_CIPHER_STRING);
+					aesKeyGen.init(AES_KEY_LENGTH_IN_BITS);
+					SecretKey aesKey = aesKeyGen.generateKey();
 					byte[] aesIV = getRandomBytes(AES_IV_LENGTH_IN_BYTES);
 					
 					sendOKAnswer(splitRequest[2], controllerChallenge, aesKey, aesIV, userPublicKey);
@@ -199,9 +204,9 @@ public class SecureChannelSetup {
 		return Keys.readPublicPEM(new File(filePath));
 	}
 
-	private void sendOKAnswer(String encodedClientChallenge, byte[] controllerChallenge, byte[] aesKey, byte[] aesIV, PublicKey userPublicKey) throws InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+	private void sendOKAnswer(String encodedClientChallenge, byte[] controllerChallenge, SecretKey aesKey, byte[] aesIV, PublicKey userPublicKey) throws InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
 		String encodedControllerChallenge = new String(Base64.encode(controllerChallenge));
-		String encodedAesKey = new String(Base64.encode(aesKey));
+		String encodedAesKey = new String(Base64.encode(aesKey.getEncoded()));
 		String encodedAesIV = new String(Base64.encode(aesIV));
 		String answer = String.format("!ok %s %s %s %s", encodedClientChallenge, encodedControllerChallenge, encodedAesKey, encodedAesIV);
 		
@@ -211,7 +216,7 @@ public class SecureChannelSetup {
 		channel.println(cipherText);
 	}
 
-	private Channel setupAES(byte[] aesKey, byte[] aesIV) throws NoSuchAlgorithmException, NoSuchPaddingException {
+	private Channel setupAES(SecretKey aesKey, byte[] aesIV) throws NoSuchAlgorithmException, NoSuchPaddingException {
 		return new AESChannel(channel, aesKey, aesIV, AES_CIPHER_STRING);
 	}
 

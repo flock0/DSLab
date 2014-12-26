@@ -15,10 +15,10 @@ public class AESChannel extends ChannelDecorator {
 	private IvParameterSpec initializationVector;
 	Cipher aesCipher;
 
-	public AESChannel(Channel underlying, byte[] key,
+	public AESChannel(Channel underlying, SecretKey aesKey,
 			byte[] initializationVector, String aesCipherString) throws NoSuchAlgorithmException, NoSuchPaddingException {
 		this.underlying = underlying;
-		this.key = new SecretKeySpec(key, aesCipherString);
+		this.key = aesKey;
 		this.initializationVector = new IvParameterSpec(initializationVector);
 
 		aesCipher = Cipher.getInstance(aesCipherString);
