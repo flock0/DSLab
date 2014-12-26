@@ -160,7 +160,7 @@ public class SecureChannelSetup {
 				if(requestIsValid(splitRequest)) {
 					PublicKey userPublicKey = loadUserPublicKey(splitRequest[1]);
 					byte[] controllerChallenge = createChallenge();
-					KeyGenerator aesKeyGen = KeyGenerator.getInstance(AES_CIPHER_STRING);
+					KeyGenerator aesKeyGen = KeyGenerator.getInstance("AES");
 					aesKeyGen.init(AES_KEY_LENGTH_IN_BITS);
 					SecretKey aesKey = aesKeyGen.generateKey();
 					byte[] aesIV = getRandomBytes(AES_IV_LENGTH_IN_BYTES);
