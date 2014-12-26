@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import client.SecureChannelSetup;
 import util.Config;
 import util.FixedParameters;
+import channels.AESChannel;
 import channels.Channel;
 import channels.ChannelSet;
 import channels.ClientCommunicator;
@@ -30,6 +31,7 @@ public class SingleClientHandler implements Runnable {
 	private User currentUser = null;
 	private ComputationCommunicator currentComputationCommunicator = null;
 	private boolean sessionIsBeingTerminated = false;
+	private boolean successfullyInitialized = false;
 	private ChannelSet openChannels;
 	private PrivateKey controllerPrivateKey;
 
@@ -43,52 +45,58 @@ public class SingleClientHandler implements Runnable {
 		this.controllerPrivateKey = controllerPrivateKey;
 		this.openChannels = openChannels;
 		
-
-		//TODO
-//		
-//		SecureChannelSetup auth = new SecureChannelSetup(channel, controllerPrivateKey);
-//		Channel aesChannel = auth.awaitAuthentication();
-//		this.communicator = new ClientCommunicator(aesChannel);
+		try {
+			SecureChannelSetup auth = new SecureChannelSetup(channel, controllerPrivateKey);
+			Channel aesChannel = auth.awaitAuthentication();
+			this.communicator = new ClientCommunicator(aesChannel);
+			currentUser = users.get(auth.getAuthenticatedUser());
+			currentUser.increaseOnlineCounter();
+			communicator.sendAnswer("Successfully logged in.");
+			successfullyInitialized = true;
+		} catch(IOException e) {
+			channel.close();
+		}
 	}
 
 	@Override
 	public void run() {
-		try {
-			while (true) {
-				ClientRequest request = communicator.getRequest();
-
-				switch (request.getType()) {
-				case Login:
-					communicator.sendAnswer(handleLogin(request));
-					break;
-				case Logout:
-					communicator.sendAnswer(handleLogout());
-					break;
-				case Credits:
-					communicator.sendAnswer(handleCredits());
-					break;
-				case Buy:
-					communicator.sendAnswer(handleBuy(request));
-					break;
-				case List:
-					communicator.sendAnswer(handleList());
-					break;
-				case Compute:
-					communicator.sendAnswer(handleCompute(request));
-					break;
-				default:
-					break; // Skip invalid requests
+		if(successfullyInitialized) {
+			try {
+				while (true) {
+					ClientRequest request = communicator.getRequest();
+	
+					switch (request.getType()) {
+					case Login:
+						communicator.sendAnswer(handleLogin(request));
+						break;
+					case Logout:
+						communicator.sendAnswer(handleLogout());
+						break;
+					case Credits:
+						communicator.sendAnswer(handleCredits());
+						break;
+					case Buy:
+						communicator.sendAnswer(handleBuy(request));
+						break;
+					case List:
+						communicator.sendAnswer(handleList());
+						break;
+					case Compute:
+						communicator.sendAnswer(handleCompute(request));
+						break;
+					default:
+						break; // Skip invalid requests
+					}
 				}
+			} catch (SocketException e) {
+				sessionIsBeingTerminated = true;
+				System.out.println("Socket to client closed: " + e.getMessage());
+			} catch (IOException e) {
+				System.out.println("Error on getting request: " + e.getMessage());
+			} finally {
+				logoutAndClose();
 			}
-		} catch (SocketException e) {
-			sessionIsBeingTerminated = true;
-			System.out.println("Socket to client closed: " + e.getMessage());
-		} catch (IOException e) {
-			System.out.println("Error on getting request: " + e.getMessage());
-		} finally {
-			logoutAndClose();
 		}
-
 	}
 
 	private String handleLogin(ClientRequest request) {

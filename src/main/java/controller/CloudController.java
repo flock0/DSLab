@@ -90,7 +90,7 @@ public class CloudController implements ICloudControllerCli, Runnable {
 
 	private void initializeListeners() throws IOException {
 		aliveListener = new AliveListener(activeNodes, allNodes, config);
-		clientListener = new ClientListener(users, activeNodes, config);
+		clientListener = new ClientListener(users, activeNodes, controllerPrivateKey, config);
 	}
 	
 	private void initializeShell() {

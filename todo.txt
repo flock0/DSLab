@@ -15,9 +15,9 @@ TODO-Liste:
   - Cloud Controller Behaviour:
     + Private Key beim Starten einlesen
     - Bei Eintreffen eines Requests:
-    - Nur RSA verschlüsselte Requests sind erlaubt (Annahme, gibt es dazu einen Foreneintrag?).
-    - public Key des entsprechenden Users laden.
-    - User ist erst online, wenn die Authentifizierung abgeschlossen ist.
+    + Nur RSA verschlüsselte Requests sind erlaubt (Annahme, gibt es dazu einen Foreneintrag?).
+    + public Key des entsprechenden Users laden.
+    + User ist erst online, wenn die Authentifizierung abgeschlossen ist.
 	- Aufpassen, falls nicht-verschlüsselte Messages kommen.
     - Aufpassen, falls mitten in der Session nicht-verschlüsselte Messages kommen.
 	- An SecureChannel einen Base64-Channel übergeben
@@ -33,3 +33,5 @@ TODO-Liste:
     - AES initialisieren, Challenge wieder base64-encoden, dann AES-verschlüsseln, dann nochmal base64-encoden
     - User ist nun online
     - Achtung bei garbled/unencrypted messages
+	- TODOs abarbeiten
+	- !login erlauben (für den Fall, dass die Auth fehlschlägt)

@@ -37,15 +37,15 @@ public class SecureChannelSetup {
 	private SecureRandom randomNumberGenerator;
 	private Channel channel;
 	private Config config;
+	private String authenticatedUser;
 	private PrivateKey privKey; //The private key of oneself
 	private PublicKey pubKey; //The public key of the other endpoint
 	private byte[] clientChallenge;
 	private boolean successfullyInitialized = false;
 	
-	public SecureChannelSetup(Channel channel, PrivateKey privKey, PublicKey pubKey) {
+	public SecureChannelSetup(Channel channel, PrivateKey privKey) {
 		this.channel = new Base64Channel(channel);
 		this.privKey = privKey;
-		this.pubKey = pubKey;
 		randomNumberGenerator = new SecureRandom();
 		
 		try {
@@ -54,9 +54,13 @@ public class SecureChannelSetup {
 		} catch (Exception e) {
 			System.out.println("RSA Initialization Error: " + e.getMessage());
 		}
-		
 	}
-	
+
+	public SecureChannelSetup(Channel channel, PrivateKey privKey, PublicKey pubKey) {
+		this(channel, privKey);
+		this.pubKey = pubKey;
+	}
+
 	private void initializeRSA() throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException {
 		rsaCipher = Cipher.getInstance(RSA_CIPHER_STRING);
 	}
@@ -161,6 +165,7 @@ public class SecureChannelSetup {
 					Channel aesChannel = setupAES(aesKey, aesIV);//eigene Methode, nicht bestehende verwenden
 					String clearTextOKAnswer = receiveOKAnswer(aesChannel);
 					if(okAnswerIsValid(clearTextOKAnswer, controllerChallenge)) {
+						authenticatedUser = splitRequest[1];
 						return aesChannel;
 					} else {
 						return null; // Die zweite Nachricht vom Client (Dritte Nachricht im Protokoll) ist ungültig
@@ -218,5 +223,9 @@ public class SecureChannelSetup {
 
 	private boolean okAnswerIsValid(String clearTextOKAnswer, byte[] controllerChallenge) {
 		return Base64.encode(controllerChallenge).equals(clearTextOKAnswer);
+	}
+
+	public String getAuthenticatedUser() {
+		return authenticatedUser;
 	}
 }
