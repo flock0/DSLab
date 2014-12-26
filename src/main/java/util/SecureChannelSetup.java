@@ -172,10 +172,10 @@ public class SecureChannelSetup {
 						authenticatedUser = splitRequest[1];
 						return aesChannel;
 					} else {
-						return null; // Die zweite Nachricht vom Client (Dritte Nachricht im Protokoll) ist ungültig
+						return null; //TODO Die zweite Nachricht vom Client (Dritte Nachricht im Protokoll) ist ungültig
 					}
 				} else {
-					return null; // Die erste Nachricht vom Client ist ungültig
+					return null; //TODO Die erste Nachricht vom Client ist ungültig
 				}
 			} catch(Exception e) {
 				throw new IOException("Authentication failed: Couldn't initialize secure channel!", e);
