@@ -2,12 +2,14 @@ package channels;
 
 import java.io.IOException;
 
+import computation.CommitRequest;
 import computation.ComputationResult;
 import computation.LogRequest;
 import computation.LogResult;
 import computation.NodeRequest;
 import computation.Request;
 import computation.Result;
+import computation.ShareRequest;
 
 /**
  * Handles communication between the controller and the node
@@ -46,7 +48,11 @@ public class ComputationCommunicator{
 		if(message != null && message.startsWith("!compute "))		
 			return new NodeRequest(message.substring(9).split("\\s"));		
 		if(message != null && message.equals("!getLogs"))		
-			return new LogRequest();			
+			return new LogRequest();
+		if(message != null && message.startsWith("!share "))		
+			return new ShareRequest(message.substring(7).trim());
+		if(message != null && message.startsWith("!commit "))		
+			return new CommitRequest(message.substring(8).trim());
 		return null;
 	}
 	

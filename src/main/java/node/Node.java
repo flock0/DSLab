@@ -30,7 +30,9 @@ public class Node implements INodeCli, Runnable {
 	private Shell shell = null;
 	private Timer aliveTimer = null;
 	private TerminableThread listener = null;
-	private boolean successfullyInitialized = false;
+	private TerminableThread commit = null;
+	private boolean successfullyInitialized;
+	private int resources;
 	/**
 	 * @param componentName
 	 *            the name of the component - represented in the prompt
@@ -55,7 +57,7 @@ public class Node implements INodeCli, Runnable {
 			initializeListener();
 			aliveTimer = new Timer();
 			initializeShell();
-			successfullyInitialized = true;
+			joinCloud();
 		} catch (IOException e) {
 			System.out.println("Couldn't create ServerSocket: " + e.getMessage());
 		}
@@ -70,6 +72,27 @@ public class Node implements INodeCli, Runnable {
 		shell.register(this);
 	}
 
+	private void joinCloud() throws IOException {
+		commit = new CommitHandler(this, config);
+		commit.start();
+		/*if(commitTask.receiveInit()) {
+			if(commitTask.addNodeToCloud()) {
+				successfullyInitialized = true;
+			} else {
+				System.out.println("Can't join cloud, shutting down!");
+				shutdown();
+			}			
+		}*/
+	}
+	
+	public void finishInitialization(boolean result) {
+		successfullyInitialized = result;
+		if(!successfullyInitialized) {
+			System.out.println("Can't join cloud, shutting down!");
+			shutdown();
+		}
+	}
+	
 	@Override
 	public void run() {
 		if(successfullyInitialized) {
@@ -142,6 +165,14 @@ public class Node implements INodeCli, Runnable {
 			}
 		}
 		return returnList;
+	}
+	
+	public int getRmin() {
+		return config.getInt("node.rmin");
+	}
+	
+	public void updateResources() {
+		// TODO
 	}
 	
 	@Override
