@@ -8,8 +8,22 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 
 
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.Provider;
 import java.security.PublicKey;
+import java.security.SecureRandom;
+import java.security.Security;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.KeyGenerator;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
 
 import channels.Base64Channel;
 import channels.Channel;
@@ -34,7 +48,7 @@ public class Client implements IClientCli, Runnable {
 	private PublicKey controllerPublicKey;
 	private boolean successfullyInitialized = false;
 	private boolean authenticated = false;
-
+	
 	/**
 	 * @param componentName
 	 *            the name of the component - represented in the prompt

@@ -21,18 +21,18 @@ TODO-Liste:
 	- Aufpassen, falls nicht-verschlüsselte Messages kommen.
     - Aufpassen, falls mitten in der Session nicht-verschlüsselte Messages kommen.
 	+ An SecureChannel einen Base64-Channel übergeben
-	- BUG: Response auf !ok kommt nicht an, da Socket geclosed. Client debuggen!
-	- Commands vom CloudController durchgehen und anpassen.
+	- Fehlermeldungen ausgeben, wenn bei der Authentifizierun was schief gegangen ist. Nicht einfach den Socket closen.
+	+ Commands vom CloudController durchgehen und anpassen.
 	- Was tun, wenn die erste oder dritte Nachricht vom Client ungültig ist? Derzeit wird null zurückgegeben. Besser machen!
   - Authentication Algorithm:
     - Message-Austausch wie in der Angabe beschrieben:
     + 1. RSA-verschlüsseltes !authenticate
-    - Challenge base64-encoden, dann RSA-encrypten, dann nochmal base64-encoden
-    - 2. RSA-verschlüsseltes !ok
-    - Alle Argumente einzeln base64-encoden, dann konkatenieren und RSA-verschlüsseln, dann nochmal base64-encoden
-    - 3. AES-verschlüsselte Challenge-Antwort
-    - AES initialisieren, Challenge wieder base64-encoden, dann AES-verschlüsseln, dann nochmal base64-encoden
-    - User ist nun online
+    + Challenge base64-encoden, dann RSA-encrypten, dann nochmal base64-encoden
+    + 2. RSA-verschlüsseltes !ok
+    + Alle Argumente einzeln base64-encoden, dann konkatenieren und RSA-verschlüsseln, dann nochmal base64-encoden
+    + 3. AES-verschlüsselte Challenge-Antwort
+    + AES initialisieren, Challenge wieder base64-encoden, dann AES-verschlüsseln, dann nochmal base64-encoden
+    + User ist nun online
     - Achtung bei garbled/unencrypted messages
 	- TODOs abarbeiten
 	- !login erlauben (für den Fall, dass die Auth fehlschlägt)

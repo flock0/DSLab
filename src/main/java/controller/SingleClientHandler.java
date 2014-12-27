@@ -51,7 +51,6 @@ public class SingleClientHandler implements Runnable {
 			this.communicator = new ClientCommunicator(aesChannel);
 			currentUser = users.get(auth.getAuthenticatedUser());
 			currentUser.increaseOnlineCounter();
-			communicator.sendAnswer("Successfully logged in.");
 			successfullyInitialized = true;
 		} catch(IOException e) {
 			channel.close();

@@ -2,6 +2,7 @@ package util;
 
 import java.io.File;
 import java.io.IOException;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
@@ -14,9 +15,12 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.bouncycastle.util.encoders.Base64;
+
+import com.sun.crypto.provider.AESKeyGenerator;
 
 import channels.AESChannel;
 import channels.Base64Channel;
@@ -123,8 +127,8 @@ public class SecureChannelSetup {
 	private Channel setupAES(String[] splitAnswer) throws NoSuchAlgorithmException, NoSuchPaddingException {
 		byte[] aesKey = getAESKey(splitAnswer);
 		byte[] aesIV = getAESIV(splitAnswer);
-		
-		return new AESChannel(channel, new SecretKeySpec(aesKey, AES_CIPHER_STRING), aesIV, AES_CIPHER_STRING);
+
+		return new AESChannel(channel, new SecretKeySpec(aesKey, "AES"), aesIV, AES_CIPHER_STRING);
 	}
 
 	private boolean answerIsValid(String message, byte[] clientChallenge) {
@@ -135,17 +139,17 @@ public class SecureChannelSetup {
 			return false;
 		if(!split[0].equals("!ok"))
 			return false;
-		if(!Base64.encode(clientChallenge).equals(split[1]))
+		if(!new String(Base64.encode(clientChallenge)).equals(split[1]))
 			return false;
 		return true;
 	}
 
 	private byte[] getAESIV(String[] splitAnswer) {
-		return Base64.decode(splitAnswer[3]);
+		return Base64.decode(splitAnswer[4]);
 	}
 
 	private byte[] getAESKey(String[] splitAnswer) {
-		return Base64.decode(splitAnswer[4]);
+		return Base64.decode(splitAnswer[3]);
 	}
 
 	private void sendAuthenticationAnswer(Channel aesChannel, String[] splitAnswer) {
@@ -164,15 +168,15 @@ public class SecureChannelSetup {
 					aesKeyGen.init(AES_KEY_LENGTH_IN_BITS);
 					SecretKey aesKey = aesKeyGen.generateKey();
 					byte[] aesIV = getRandomBytes(AES_IV_LENGTH_IN_BYTES);
-					
 					sendOKAnswer(splitRequest[2], controllerChallenge, aesKey, aesIV, userPublicKey);
-					Channel aesChannel = setupAES(aesKey, aesIV);//eigene Methode, nicht bestehende verwenden
+					Channel aesChannel = setupAES(aesKey, aesIV);
 					String clearTextOKAnswer = receiveOKAnswer(aesChannel);
 					if(okAnswerIsValid(clearTextOKAnswer, controllerChallenge)) {
 						authenticatedUser = splitRequest[1];
 						return aesChannel;
 					} else {
 						return null; //TODO Die zweite Nachricht vom Client (Dritte Nachricht im Protokoll) ist ungültig
+						//TODO Abfangen, sonst tritt eine NullPointerException durch den nicht gesetzten authenticatedUser auf
 					}
 				} else {
 					return null; //TODO Die erste Nachricht vom Client ist ungültig
@@ -226,7 +230,7 @@ public class SecureChannelSetup {
 	}
 
 	private boolean okAnswerIsValid(String clearTextOKAnswer, byte[] controllerChallenge) {
-		return Base64.encode(controllerChallenge).equals(clearTextOKAnswer);
+		return new String(Base64.encode(controllerChallenge)).equals(clearTextOKAnswer);
 	}
 
 	public String getAuthenticatedUser() {
