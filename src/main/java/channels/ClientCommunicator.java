@@ -133,7 +133,8 @@ public class ClientCommunicator {
 	}
 	
 	private ClientRequest validateAuthenticate(String[] split) {
-		//An dieser Stelle sind wir auf jeden Fall schon authentifiziert. Der Befehl ist also unnötig
+		// We use the ClientCommunicator only when we are already authenticated.
+		// So at this point we would only need to return a simple message.
 		ClientRequest request = new ClientRequest();
 		request.setType(ComputationRequestType.Invalid);
 		underlying.println("Already authenticated");

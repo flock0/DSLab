@@ -32,6 +32,7 @@ public class SingleClientHandler implements Runnable {
 	private ComputationCommunicator currentComputationCommunicator = null;
 	private boolean sessionIsBeingTerminated = false;
 	private boolean successfullyInitialized = false;
+	private Channel underlyingChannel;
 	private ChannelSet openChannels;
 	private PrivateKey controllerPrivateKey;
 
@@ -44,22 +45,27 @@ public class SingleClientHandler implements Runnable {
 		this.users = users;
 		this.controllerPrivateKey = controllerPrivateKey;
 		this.openChannels = openChannels;
+		this.underlyingChannel = channel;
 		
 		try {
-			SecureChannelSetup auth = new SecureChannelSetup(channel, controllerPrivateKey, config);
-			Channel aesChannel = auth.awaitAuthentication();
-			this.communicator = new ClientCommunicator(aesChannel);
-			currentUser = users.get(auth.getAuthenticatedUser());
-			currentUser.increaseOnlineCounter();
-			successfullyInitialized = true;
+			authenticateClient();
 		} catch(IOException e) {
 			channel.close();
 		}
 	}
 
+	private void authenticateClient() throws IOException {
+		SecureChannelSetup auth = new SecureChannelSetup(underlyingChannel, controllerPrivateKey, config);
+		Channel aesChannel = auth.awaitAuthentication();
+		this.communicator = new ClientCommunicator(aesChannel);
+		currentUser = users.get(auth.getAuthenticatedUser());
+		currentUser.increaseOnlineCounter();
+		successfullyInitialized = true;
+	}
+
 	@Override
 	public void run() {
-		if(successfullyInitialized) {
+		if(successfullyInitialized && currentUser != null) {
 			try {
 				while (true) {
 					ClientRequest request = communicator.getRequest();
@@ -70,6 +76,7 @@ public class SingleClientHandler implements Runnable {
 						break;
 					case Logout:
 						communicator.sendAnswer(handleLogout());
+						authenticateClient();
 						break;
 					case Credits:
 						communicator.sendAnswer(handleCredits());
