@@ -4,24 +4,22 @@ import java.io.IOException;
 
 import channels.Channel;
 
-public class SingleCommitHandler implements Runnable {
+public class SingleRollbackHandler implements Runnable {
 
 	private Channel channel;
 	private CommitHandler commit;
-	private int res;
 	
-	public SingleCommitHandler(Channel channel, CommitHandler commit, int res) {
+	public SingleRollbackHandler(Channel channel, CommitHandler commit) {
 		this.channel = channel;
 		this.commit = commit;
-		this.res = res;
 	}
 
 	@Override
 	public void run() {
-		channel.println(String.format("!commit %d", res));
+		channel.println("!rollback");
 		try {
 			channel.readLine();
-			commit.addCommitAck();
+			commit.addRollbackAck();
 		} catch (IOException e) {
 			System.out.println("Error on getting request: " + e.getMessage());
 		} finally {

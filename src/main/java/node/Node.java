@@ -31,7 +31,7 @@ public class Node implements INodeCli, Runnable {
 	private Timer aliveTimer = null;
 	private TerminableThread listener = null;
 	private TerminableThread commit = null;
-	private boolean successfullyInitialized;
+	private boolean successfullyInitialized = false;
 	private int resources;
 	/**
 	 * @param componentName
@@ -73,16 +73,9 @@ public class Node implements INodeCli, Runnable {
 	}
 
 	private void joinCloud() throws IOException {
+		System.out.println("Trying to join cloud...");
 		commit = new CommitHandler(this, config);
 		commit.start();
-		/*if(commitTask.receiveInit()) {
-			if(commitTask.addNodeToCloud()) {
-				successfullyInitialized = true;
-			} else {
-				System.out.println("Can't join cloud, shutting down!");
-				shutdown();
-			}			
-		}*/
 	}
 	
 	public void finishInitialization(boolean result) {
@@ -90,6 +83,11 @@ public class Node implements INodeCli, Runnable {
 		if(!successfullyInitialized) {
 			System.out.println("Can't join cloud, shutting down!");
 			shutdown();
+		} else {
+			// make sure everything is shut down before 
+			// starting shell and all the listeners
+			commit.shutdown();
+			new Thread(this).start();
 		}
 	}
 	
@@ -171,8 +169,8 @@ public class Node implements INodeCli, Runnable {
 		return config.getInt("node.rmin");
 	}
 	
-	public void updateResources() {
-		// TODO
+	public void updateResources(int resources) {
+		this.resources = resources;
 	}
 	
 	@Override
@@ -188,18 +186,16 @@ public class Node implements INodeCli, Runnable {
 	 */
 	public static void main(String[] args) {
 		Node node = new Node(args[0], new Config(args[0]), System.in,
-				System.out);
-		new Thread(node).start();
-		
+				System.out);		
 	}
 
 	// --- Commands needed for Lab 2. Please note that you do not have to
 	// implement them for the first submission. ---
 
 	@Override
+	@Command
 	public String resources() throws IOException {
-		// TODO Auto-generated method stub
-		return null;
+		return String.valueOf(resources);
 	}
 
 }

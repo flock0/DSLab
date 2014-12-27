@@ -50,7 +50,9 @@ public class SingleComputationHandler implements Runnable {
 				ShareRequest sr = (ShareRequest)request;
 				result = new ShareResult(ResultStatus.OK, (node.getRmin() <= sr.getResources()));
 			} else if(request instanceof CommitRequest){
-				result = null;
+				CommitRequest cr = (CommitRequest)request;
+				handleCommit(cr.getResources());
+				result = new Result(ResultStatus.OK);
 			}
 			else
 			{
@@ -58,12 +60,16 @@ public class SingleComputationHandler implements Runnable {
 			}
 			channel.sendResult(result);
 			
-			
 		} catch (IOException e) {
 			System.out.println("Error on getting request: " + e.getMessage());
 		} finally {
 			channel.close();
 		}
 		
+	}
+	
+	private void handleCommit(int resources) {
+		if(resources >= 0)
+			node.updateResources(resources);
 	}
 }

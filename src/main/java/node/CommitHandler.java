@@ -11,6 +11,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import channels.Channel;
 import channels.ChannelSet;
@@ -28,6 +29,11 @@ public class CommitHandler extends TerminableThread {
 	private ArrayList<controller.Node> onlineNodes;
 	private ArrayList<Boolean> nodeReplies;
 	private int rmax;
+	
+	private ChannelSet channelSet;
+	private ExecutorService threadPool;
+	private int commitAckCounter;
+	private int rollbackAckCounter;
 	
 	private String[] initMessage;
 	
@@ -93,22 +99,23 @@ public class CommitHandler extends TerminableThread {
 	@Override
 	public void run() {
 		if(initMessage.length == 2) {
+			node.updateResources(rmax);
 			node.finishInitialization(true);
 			shutdown();
 		} else {
 			// send !share <resources> to all active nodes
-			int res = (int) Math.floor(rmax/onlineNodes.size());
-			ChannelSet channelSet = new ChannelSet();
-			ExecutorService threadPool = Executors.newFixedThreadPool(onlineNodes.size());
+			int res = (int) Math.floor(rmax/(onlineNodes.size()+1));
+			channelSet = new ChannelSet();
+			threadPool = Executors.newFixedThreadPool(onlineNodes.size());
 			try {
 				for(int i = 0; i < onlineNodes.size(); i++) {
 					Channel channel = new TcpChannel(
 							new Socket(onlineNodes.get(i).getIPAddress().getHostAddress(), 
 									   onlineNodes.get(i).getTCPPort()));
 					channelSet.add(channel);
-					threadPool.execute(new SingleCommitHandler(channel, this, res));
+					threadPool.execute(new SingleShareHandler(channel, this, res));
 				}
-			}  catch (UnknownHostException e) {
+			} catch (UnknownHostException e) {
 				System.out.println("Couldn't resolve IP address: " + e.getMessage());
 			} catch (IOException e) {
 				System.out.println("Couldn't create socket: " + e.getMessage());
@@ -120,14 +127,69 @@ public class CommitHandler extends TerminableThread {
 		nodeReplies.add(reply);
 		if(nodeReplies.size() == onlineNodes.size()) {
 			for(int i = 0; i < nodeReplies.size(); i++) {
+				// at least one node replies with !nok, send !rollback
 				if(nodeReplies.get(i).booleanValue() == false) {
-					node.finishInitialization(false);
-					shutdown();
+					broadcastRollback();
+					return;
 				}
 			}
-			// TODO: inform that a new node is joining the cloud
-			
+			// inform that a new node is joining the cloud
+			broadcastCommit();
+		}
+	}
+	
+	private void broadcastCommit() {
+		int res = (int) Math.floor(rmax/(onlineNodes.size()+1));
+		channelSet = new ChannelSet();
+		threadPool = Executors.newFixedThreadPool(onlineNodes.size());
+		commitAckCounter = 0;
+		node.updateResources(res);
+		try {
+			for(int i = 0; i < onlineNodes.size(); i++) {
+				Channel channel = new TcpChannel(
+						new Socket(onlineNodes.get(i).getIPAddress().getHostAddress(), 
+								   onlineNodes.get(i).getTCPPort()));
+				channelSet.add(channel);
+				threadPool.execute(new SingleCommitHandler(channel, this, res));
+			}
+		} catch (UnknownHostException e) {
+			System.out.println("Couldn't resolve IP address: " + e.getMessage());
+		} catch (IOException e) {
+			System.out.println("Couldn't create socket: " + e.getMessage());
+		}
+	}
+	
+	private void broadcastRollback() {
+		channelSet = new ChannelSet();
+		threadPool = Executors.newFixedThreadPool(onlineNodes.size());
+		rollbackAckCounter = 0;
+		try {
+			for(int i = 0; i < onlineNodes.size(); i++) {
+				Channel channel = new TcpChannel(
+						new Socket(onlineNodes.get(i).getIPAddress().getHostAddress(), 
+								   onlineNodes.get(i).getTCPPort()));
+				channelSet.add(channel);
+				threadPool.execute(new SingleRollbackHandler(channel, this));
+			}
+		} catch (UnknownHostException e) {
+			System.out.println("Couldn't resolve IP address: " + e.getMessage());
+		} catch (IOException e) {
+			System.out.println("Couldn't create socket: " + e.getMessage());
+		}
+	}
+	
+	public void addCommitAck() {
+		commitAckCounter++;
+		if (commitAckCounter == onlineNodes.size()) {
 			node.finishInitialization(true);
+			shutdown();
+		}
+	}
+	
+	public void addRollbackAck() {
+		rollbackAckCounter++;
+		if (rollbackAckCounter == onlineNodes.size()) {
+			node.finishInitialization(false);
 			shutdown();
 		}
 	}
@@ -156,7 +218,8 @@ public class CommitHandler extends TerminableThread {
 					} else {
 						return false;
 					}
-				} while(i < (message.length-2));
+					i++;
+				} while(i <= (message.length-2));
 			}
 			return true;
 		} else 
@@ -181,5 +244,22 @@ public class CommitHandler extends TerminableThread {
 	@Override
 	public void shutdown() {
 		closeDatagramSocket();
+		if(threadPool != null && channelSet != null) {
+			threadPool.shutdown();
+			try {
+				channelSet.closeAll();
+				if (!threadPool.awaitTermination(3, TimeUnit.SECONDS)) {
+					threadPool.shutdownNow(); // Cancel currently executing tasks
+					// Wait a while for tasks to respond to being cancelled
+					if (!threadPool.awaitTermination(3, TimeUnit.SECONDS))
+						System.err.println("Client ThreadPool did not terminate");
+				}
+			} catch (InterruptedException ie) {
+				// (Re-)Cancel if current thread also interrupted
+				threadPool.shutdownNow();
+				// Preserve interrupt status
+				Thread.currentThread().interrupt();
+			}
+		}
 	}
 }

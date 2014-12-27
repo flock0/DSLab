@@ -51,8 +51,8 @@ public class ComputationCommunicator{
 			return new LogRequest();
 		if(message != null && message.startsWith("!share "))		
 			return new ShareRequest(message.substring(7).trim());
-		if(message != null && message.startsWith("!commit "))		
-			return new CommitRequest(message.substring(8).trim());
+		if(message != null && (message.startsWith("!commit ") || message.equals("!rollback")))		
+			return new CommitRequest(message);
 		return null;
 	}
 	
