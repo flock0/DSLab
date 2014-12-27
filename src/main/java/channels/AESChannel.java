@@ -55,7 +55,9 @@ public class AESChannel extends ChannelDecorator {
 			byte[] cipherText = aesCipher.doFinal(out.getBytes());
 			underlying.println(cipherText);
 		} catch (Exception e) {
-			//TODO: Gscheit handeln
+			//TODO: Nicht gut gehandelt. Darf nicht raufpropagiert werden, 
+			// da sonst die Zusicherungen im Channel-Interface verletzt würden.
+			// Was tun?
 		}
 
 	}
@@ -67,7 +69,9 @@ public class AESChannel extends ChannelDecorator {
 			byte[] cipherText = aesCipher.doFinal(out);
 			underlying.println(cipherText);
 		} catch (Exception e) {
-			//TODO: Gscheit handeln
+			//TODO: Nicht gut gehandelt. Darf nicht raufpropagiert werden, 
+			// da sonst die Zusicherungen im Channel-Interface verletzt würden.
+			// Was tun?
 		}
 	}
 
