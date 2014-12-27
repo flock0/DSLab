@@ -1,5 +1,6 @@
 start ant run-controller
 start ant run-client
+start ant run-admin
 start ant run-node1
 start ant run-node2
 start ant run-node3
