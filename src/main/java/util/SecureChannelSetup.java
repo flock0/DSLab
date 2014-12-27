@@ -175,11 +175,10 @@ public class SecureChannelSetup {
 						authenticatedUser = splitRequest[1];
 						return aesChannel;
 					} else {
-						return null; //TODO Die zweite Nachricht vom Client (Dritte Nachricht im Protokoll) ist ungültig
-						//TODO Abfangen, sonst tritt eine NullPointerException durch den nicht gesetzten authenticatedUser auf
+						throw new IOException("Authentication failed: Response from client to our challenge was invalid");
 					}
 				} else {
-					return null; //TODO Die erste Nachricht vom Client ist ungültig
+					throw new IOException("Authentication failed: Request from client was invalid.");
 				}
 			} catch(Exception e) {
 				throw new IOException("Authentication failed: Couldn't initialize secure channel!", e);
