@@ -3,6 +3,7 @@ package util;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import computation.ComputationResult;
@@ -13,6 +14,17 @@ public class NodeLogger {
 	public static String NodeID = "";
 	public static String Directory = "";
 	
+	private static final ThreadLocal<SimpleDateFormat> sdf = new ThreadLocal<SimpleDateFormat>(){
+		@Override
+		protected SimpleDateFormat initialValue() {
+			return new SimpleDateFormat("yyyyMMdd_HHmmss.SSS");
+		}
+	};
+	
+	public static String format(Date date) {
+		return sdf.get().format(date);
+	}
+	
 	/**
 	 * Logs the computation. nodeID and Directory must be set
 	 * @param request The request that should be logged
@@ -22,7 +34,7 @@ public class NodeLogger {
 		String logLine1 = String.format("%d %c %d", request.getOperand1(), request.getOperator(), request.getOperand2());
 		String logLine2 = result.toLogString();
 		
-		String fileName = String.format("%s_%s.log", DateUtils.formatDate(new Date()), NodeID);
+		String fileName = String.format("%s_%s.log", format(new Date()), NodeID);
 		String directoryPath = System.getProperty("user.dir") + File.separator + Directory;
 		directoryPath = directoryPath.replace("/", File.separator);
 		String filePath = directoryPath + File.separator + fileName;
