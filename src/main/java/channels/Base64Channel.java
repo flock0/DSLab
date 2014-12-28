@@ -15,8 +15,7 @@ public class Base64Channel extends ChannelDecorator {
 
 	@Override
 	public String readStringLine() throws IOException {
-		byte[] decoded = Base64.decode(underlying.readStringLine());
-		return new String(decoded);
+		return new String(decodeLineFromUnderlying());
 	}
 
 	@Override
@@ -27,15 +26,20 @@ public class Base64Channel extends ChannelDecorator {
 
 	@Override
 	public byte[] readByteLine() throws IOException {
-		byte[] decoded = Base64.decode(underlying.readStringLine());
-		return decoded;
+		return decodeLineFromUnderlying();
 	}
 
 	@Override
 	public void println(byte[] out) {
 		byte[] encoded = Base64.encode(out);
 		underlying.println(new String(encoded));
-		
 	}
 	
+	private byte[] decodeLineFromUnderlying() throws IOException {
+		String readLine = underlying.readStringLine();
+		if(readLine.isEmpty())
+			return new byte[1];
+		else
+			return Base64.decode(readLine);
+	}
 }

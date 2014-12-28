@@ -154,7 +154,11 @@ public class SingleClientHandler implements Runnable {
 	private String handleList() {
 		if (!isLoggedIn())
 			return "You need to log in first.";
-		return getAvailableOperators();
+		String availableOperators = getAvailableOperators();
+		if(availableOperators.isEmpty())
+			return " "; // Avoid issues that occur when AES-decrypting empty strings
+		else
+			return getAvailableOperators();
 	}
 
 	private String getAvailableOperators() {
