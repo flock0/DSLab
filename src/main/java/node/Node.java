@@ -49,11 +49,11 @@ public class Node implements INodeCli, Runnable {
 		this.config = config;
 		this.userRequestStream = userRequestStream;
 		this.userResponseStream = userResponseStream;
-		
+
 		try {
 			NodeLogger.NodeID = componentName;
 			NodeLogger.Directory = config.getString("log.dir");
-			
+
 			initializeListener();
 			aliveTimer = new Timer();
 			initializeShell();
@@ -77,12 +77,13 @@ public class Node implements INodeCli, Runnable {
 		commit = new CommitHandler(this, config);
 		commit.start();
 	}
-	
+
 	public void finishInitialization(boolean result) {
 		successfullyInitialized = result;
 		if(!successfullyInitialized) {
 			System.out.println("Can't join cloud, shutting down!");
-			shutdown();
+			commit.shutdown();
+			new Thread(this).start();
 		} else {
 			// make sure everything is shut down before 
 			// starting shell and all the listeners
@@ -90,13 +91,16 @@ public class Node implements INodeCli, Runnable {
 			new Thread(this).start();
 		}
 	}
-	
+
 	@Override
 	public void run() {
 		if(successfullyInitialized) {
 			startAliveTimer();
 			startRequestListener();
 			startShell();
+		} else {
+			shutdown();
+			Thread.currentThread().interrupt();
 		}
 	}
 
@@ -127,7 +131,7 @@ public class Node implements INodeCli, Runnable {
 			aliveTimer.cancel();
 		if(shell != null)
 			shell.close();
-		
+
 	}
 
 	public List<ComputationRequestInfo> getLogs()
@@ -159,20 +163,20 @@ public class Node implements INodeCli, Runnable {
 			}
 			catch(IOException e)
 			{
-				 throw new RuntimeException("IOException during getLogs.", e);
+				throw new RuntimeException("IOException during getLogs.", e);
 			}
 		}
 		return returnList;
 	}
-	
+
 	public int getRmin() {
 		return config.getInt("node.rmin");
 	}
-	
+
 	public void updateResources(int resources) {
 		this.resources = resources;
 	}
-	
+
 	@Override
 	public String history(int numberOfRequests) throws IOException {
 		// TODO Auto-generated method stub

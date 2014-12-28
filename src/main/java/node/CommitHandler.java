@@ -126,6 +126,7 @@ public class CommitHandler extends TerminableThread {
 	public void addNodeReply(boolean reply) {
 		nodeReplies.add(reply);
 		if(nodeReplies.size() == onlineNodes.size()) {
+			tidyUp();
 			for(int i = 0; i < nodeReplies.size(); i++) {
 				// at least one node replies with !nok, send !rollback
 				if(nodeReplies.get(i).booleanValue() == false) {
@@ -241,9 +242,7 @@ public class CommitHandler extends TerminableThread {
 		}
 	}
 
-	@Override
-	public void shutdown() {
-		closeDatagramSocket();
+	private void tidyUp() {
 		if(threadPool != null && channelSet != null) {
 			threadPool.shutdown();
 			try {
@@ -261,5 +260,11 @@ public class CommitHandler extends TerminableThread {
 				Thread.currentThread().interrupt();
 			}
 		}
+	}
+	
+	@Override
+	public void shutdown() {
+		closeDatagramSocket();
+		tidyUp();
 	}
 }
