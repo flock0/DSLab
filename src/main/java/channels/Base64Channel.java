@@ -1,6 +1,7 @@
 package channels;
 
 import java.io.IOException;
+
 import org.bouncycastle.util.encoders.Base64;
 
 /**
@@ -19,14 +20,14 @@ public class Base64Channel extends ChannelDecorator {
 	}
 
 	@Override
-	public void println(String out) {
-		byte[] encoded = Base64.encode(out.getBytes());
-		underlying.println(new String(encoded));
+	public byte[] readByteLine() throws IOException {
+		return decodeLineFromUnderlying();
 	}
 
 	@Override
-	public byte[] readByteLine() throws IOException {
-		return decodeLineFromUnderlying();
+	public void println(String out) {
+		byte[] encoded = Base64.encode(out.getBytes());
+		underlying.println(new String(encoded));
 	}
 
 	@Override
@@ -37,9 +38,6 @@ public class Base64Channel extends ChannelDecorator {
 	
 	private byte[] decodeLineFromUnderlying() throws IOException {
 		String readLine = underlying.readStringLine();
-		if(readLine.isEmpty())
-			return new byte[1];
-		else
-			return Base64.decode(readLine);
+		return Base64.decode(readLine);
 	}
 }
