@@ -12,7 +12,6 @@ import java.util.concurrent.TimeUnit;
 
 import util.Config;
 import util.TerminableThread;
-import channels.Base64Channel;
 import channels.Channel;
 import channels.ChannelSet;
 import channels.TcpChannel;

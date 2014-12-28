@@ -13,12 +13,12 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import util.Config;
 import util.FixedParameters;
 import util.SecureChannelSetup;
-import channels.AESChannel;
 import channels.Channel;
 import channels.ChannelSet;
 import channels.ClientCommunicator;
 import channels.ComputationCommunicator;
 import channels.TcpChannel;
+
 import computation.ComputationResult;
 import computation.NodeRequest;
 

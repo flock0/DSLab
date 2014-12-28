@@ -1,32 +1,17 @@
 package controller;
 
-import util.Config;
-import util.Keys;
-import util.SecurityUtils;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
-import java.security.Provider;
-import java.security.SecureRandom;
-import java.security.Security;
 import java.util.Timer;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.KeyGenerator;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.IvParameterSpec;
-
+import util.Config;
+import util.Keys;
+import util.SecurityUtils;
 import cli.Command;
 import cli.Shell;
 
@@ -125,7 +110,7 @@ public class CloudController implements ICloudControllerCli, Runnable {
 	}
 
 	private void startNodePurgeTimer() {
-		nodePurgeTimer.schedule(new NodePurgeTask(activeNodes, config), 0, config.getInt("node.checkPeriod"));
+		nodePurgeTimer.schedule(new NodePurgeTask(activeNodes), 0, config.getInt("node.checkPeriod"));
 	}
 
 	private void startListeners() {
