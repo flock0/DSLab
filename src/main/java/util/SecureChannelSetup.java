@@ -38,6 +38,7 @@ public class SecureChannelSetup {
 	private static final String AES_CIPHER_STRING = "AES/CTR/NoPadding";
 	private static final int AES_KEY_LENGTH_IN_BITS = 256;
 	private static final int AES_IV_LENGTH_IN_BYTES = 16;
+	private final String B64 = "a-zA-Z0-9/+";
 	private Cipher rsaCipher;
 	private SecureRandom randomNumberGenerator;
 	private Channel channel;
@@ -134,11 +135,13 @@ public class SecureChannelSetup {
 	private boolean answerIsValid(String message, byte[] clientChallenge) {
 		if(message == null)
 			return false;
+
+		boolean answerIsValid = message.matches("!ok ["+B64+"]{43}= ["+B64+"]{43}= ["+B64+"]{43}= ["+B64+"]{22}==");
+		assert answerIsValid : "2nd message";
+		if(!answerIsValid)
+			return false;
+
 		String[] split = message.split("\\s");
-		if(split.length != 5)
-			return false;
-		if(!split[0].equals("!ok"))
-			return false;
 		if(!new String(Base64.encode(clientChallenge)).equals(split[1]))
 			return false;
 		return true;
@@ -161,7 +164,7 @@ public class SecureChannelSetup {
 			try {
 				String clearTextRequest = receiveRequest();
 				String[] splitRequest = clearTextRequest.split("\\s");
-				if(requestIsValid(splitRequest)) {
+				if(requestIsValid(clearTextRequest)) {
 					PublicKey userPublicKey = loadUserPublicKey(splitRequest[1]);
 					byte[] controllerChallenge = createChallenge();
 					KeyGenerator aesKeyGen = KeyGenerator.getInstance("AES");
@@ -175,10 +178,10 @@ public class SecureChannelSetup {
 						authenticatedUser = splitRequest[1];
 						return aesChannel;
 					} else {
-						throw new IOException("Authentication failed: Response from client to our challenge was invalid");
+						throw new IOException("Response from client to our challenge was invalid");
 					}
 				} else {
-					throw new IOException("Authentication failed: Request from client was invalid.");
+					throw new IOException("Request from client was invalid.");
 				}
 			} catch(Exception e) {
 				throw new IOException("Authentication failed: Couldn't initialize secure channel!", e);
@@ -193,12 +196,10 @@ public class SecureChannelSetup {
 		return new String(rsaCipher.doFinal(encryptedRequest));
 	}
 
-	private boolean requestIsValid(String[] splitRequest) {
-		if(splitRequest.length != 3)
-			return false;
-		if(!splitRequest[0].equals("!authenticate"))
-			return false;
-		return true;
+	private boolean requestIsValid(String request) {
+		boolean requestIsValid = request.matches("!authenticate \\w+ ["+B64+"]{43}=");
+		assert requestIsValid : "1st message"; 
+		return requestIsValid;
 	}
 
 	private PublicKey loadUserPublicKey(String username) throws IOException {
@@ -229,7 +230,9 @@ public class SecureChannelSetup {
 	}
 
 	private boolean okAnswerIsValid(String clearTextOKAnswer, byte[] controllerChallenge) {
-		return new String(Base64.encode(controllerChallenge)).equals(clearTextOKAnswer);
+		boolean okAnswerIsValid = clearTextOKAnswer.matches("["+B64+"]{43}=");
+		assert okAnswerIsValid :  "3rd message";
+		return okAnswerIsValid && new String(Base64.encode(controllerChallenge)).equals(clearTextOKAnswer);
 	}
 
 	public String getAuthenticatedUser() {

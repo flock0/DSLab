@@ -1,5 +1,5 @@
 TODO-Liste:
--  Secure Channel:
++  Secure Channel:
   + Client Behaviour:
     + !authenticate-Message akzeptieren und verarbeiten.
     + Public Key vom Controller laden (util.keys verwenden).
@@ -24,7 +24,7 @@ TODO-Liste:
 	- Fehlermeldungen ausgeben, wenn bei der Authentifizierun was schief gegangen ist. Nicht einfach den Socket closen.
 	+ Commands vom CloudController durchgehen und anpassen.
 	+ Was tun, wenn die erste oder dritte Nachricht vom Client ungültig ist? Derzeit wird null zurückgegeben. Besser machen!
-  - Authentication Algorithm:
+  + Authentication Algorithm:
     + Message-Austausch wie in der Angabe beschrieben:
     + 1. RSA-verschlüsseltes !authenticate
     + Challenge base64-encoden, dann RSA-encrypten, dann nochmal base64-encoden
