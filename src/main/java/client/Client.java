@@ -43,7 +43,7 @@ public class Client implements IClientCli, Runnable {
 	private InputStream userRequestStream;
 	private PrintStream userResponseStream;
 	private Channel underlyingChannel = null; // The original underlying channel
-	private Channel channel = null; // The channel that may be decorated during a session with i.e. AES encryption
+	private Channel channel = null; // The channel that may be decorated during a session with e.g. AES encryption
 	private Shell shell;
 	private PublicKey controllerPublicKey;
 	private boolean successfullyInitialized = false;
@@ -115,7 +115,7 @@ public class Client implements IClientCli, Runnable {
 			authenticated = false;
 			channel.println("!logout");
 			String response = channel.readStringLine();
-			channel = underlyingChannel;
+			channel = underlyingChannel; // Move from the encrypted channel back to the unencrypted
 			return response;
 		} else
 			return "Currently not logged in. Please !authenticate first";

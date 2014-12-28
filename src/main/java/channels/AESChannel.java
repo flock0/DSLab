@@ -9,14 +9,16 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
+/**
+ * A two-way communication channel that uses AES to encrypt its messages
+ */
 public class AESChannel extends ChannelDecorator {
 
 	private SecretKey key;
 	private IvParameterSpec initializationVector;
 	Cipher aesCipher;
 
-	public AESChannel(Channel underlying, SecretKey aesKey,
-			byte[] initializationVector, String aesCipherString) throws NoSuchAlgorithmException, NoSuchPaddingException {
+	public AESChannel(Channel underlying, SecretKey aesKey, byte[] initializationVector, String aesCipherString) throws NoSuchAlgorithmException, NoSuchPaddingException {
 		this.underlying = underlying;
 		this.key = aesKey;
 		this.initializationVector = new IvParameterSpec(initializationVector);
@@ -26,23 +28,18 @@ public class AESChannel extends ChannelDecorator {
 
 	@Override
 	public String readStringLine() throws IOException {
-		try {
-			aesCipher.init(Cipher.DECRYPT_MODE, key, initializationVector);
-			byte[] clearText = aesCipher.doFinal(underlying.readByteLine());
-			return new String(clearText);
-		} catch (Exception e) {
-			throw new IOException("Couldn't decrypt with AES: " +  e.getMessage(), e);
-		}
-		
-
+		return new String(decryptLineFromUnderlying());
 	}
 
 	@Override
 	public byte[] readByteLine() throws IOException {
+		return decryptLineFromUnderlying();
+	}
+
+	private byte[] decryptLineFromUnderlying() throws IOException {
 		try {
 			aesCipher.init(Cipher.DECRYPT_MODE, key, initializationVector);
-			byte[] clearText = aesCipher.doFinal(underlying.readByteLine());
-			return clearText;
+			return aesCipher.doFinal(underlying.readByteLine());
 		} catch (Exception e) {
 			throw new IOException("Couldn't decrypt with AES: " +  e.getMessage(), e);
 		}
@@ -50,20 +47,16 @@ public class AESChannel extends ChannelDecorator {
 
 	@Override
 	public void println(String out) {
-		try {
-			aesCipher.init(Cipher.ENCRYPT_MODE, key, initializationVector);
-			byte[] cipherText = aesCipher.doFinal(out.getBytes());
-			underlying.println(cipherText);
-		} catch (Exception e) {
-			//TODO: Nicht gut gehandelt. Darf nicht raufpropagiert werden, 
-			// da sonst die Zusicherungen im Channel-Interface verletzt würden.
-			// Was tun?
-		}
+		encryptAndPrintToUnderlying(out.getBytes());
 
 	}
 
 	@Override
 	public void println(byte[] out) {
+		encryptAndPrintToUnderlying(out);
+	}
+	
+	private void encryptAndPrintToUnderlying(byte[] out) {
 		try {
 			aesCipher.init(Cipher.ENCRYPT_MODE, key, initializationVector);
 			byte[] cipherText = aesCipher.doFinal(out);
@@ -74,6 +67,5 @@ public class AESChannel extends ChannelDecorator {
 			// Was tun?
 		}
 	}
-
 
 }

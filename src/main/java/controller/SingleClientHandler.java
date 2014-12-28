@@ -32,7 +32,7 @@ public class SingleClientHandler implements Runnable {
 	private ComputationCommunicator currentComputationCommunicator = null;
 	private boolean sessionIsBeingTerminated = false;
 	private boolean successfullyInitialized = false;
-	private Channel underlyingChannel;
+	private Channel underlyingChannel; // The original underlying channel
 	private ChannelSet openChannels;
 	private PrivateKey controllerPrivateKey;
 
@@ -58,14 +58,19 @@ public class SingleClientHandler implements Runnable {
 		SecureChannelSetup auth = new SecureChannelSetup(underlyingChannel, controllerPrivateKey, config);
 		Channel aesChannel = auth.awaitAuthentication();
 		this.communicator = new ClientCommunicator(aesChannel);
-		currentUser = users.get(auth.getAuthenticatedUser());
+		currentUser = users.get(auth.getAuthenticatedUsername());
 		currentUser.increaseOnlineCounter();
 		successfullyInitialized = true;
 	}
 
 	@Override
 	public void run() {
-		if(successfullyInitialized && currentUser != null) {
+		/*
+		 * Only read commands via the encrypted channel when
+		 * we are successfully initialized and have a user
+		 * currently authenticated.
+		 */
+		if(successfullyInitialized && isLoggedIn()) {
 			try {
 				while (true) {
 					ClientRequest request = communicator.getRequest();
@@ -282,7 +287,7 @@ public class SingleClientHandler implements Runnable {
 		int usageCost = calculateUsageCost(result);
 		synchronized(node) {
 			synchronized(activeNodes) {
-				// Remove Node from all Operator Sets, change the Usage value and readd.
+				// Remove Node from all Operator Sets, change the Usage value and re-add.
 				List<ConcurrentSkipListSet<Node>> setsWithNodes = new ArrayList<>();
 				for(ConcurrentSkipListSet<Node> operatorSet : activeNodes.values()) {
 					if(operatorSet.contains(node))

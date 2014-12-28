@@ -33,25 +33,26 @@ import channels.Channel;
  */
 public class SecureChannelSetup {
 
-	private static final int CHALLENGE_LENGTH_IN_BYTES = 32;
+	
 	private static final String RSA_CIPHER_STRING = "RSA/NONE/OAEPWithSHA256AndMGF1Padding";
 	private static final String AES_CIPHER_STRING = "AES/CTR/NoPadding";
+	private static final int CHALLENGE_LENGTH_IN_BYTES = 32;
 	private static final int AES_KEY_LENGTH_IN_BITS = 256;
 	private static final int AES_IV_LENGTH_IN_BYTES = 16;
-	private final String B64 = "a-zA-Z0-9/+";
+	private static final String B64 = "a-zA-Z0-9/+"; // Used for validating the authentication messages
 	private Cipher rsaCipher;
 	private SecureRandom randomNumberGenerator;
 	private Channel channel;
 	private Config config;
-	private String authenticatedUser;
-	private PrivateKey privKey; //The private key of oneself
-	private PublicKey pubKey; //The public key of the other endpoint
+	private String authenticatedUsername;
+	private PrivateKey ownPrivKey; //The private key of oneself
+	private PublicKey otherPubKey; //The public key of the other endpoint
 	private byte[] clientChallenge;
 	private boolean successfullyInitialized = false;
 	
 	public SecureChannelSetup(Channel channel, PrivateKey privKey, Config config) {
 		this.channel = new Base64Channel(channel);
-		this.privKey = privKey;
+		this.ownPrivKey = privKey;
 		this.config = config;
 		randomNumberGenerator = new SecureRandom();
 		
@@ -65,7 +66,7 @@ public class SecureChannelSetup {
 
 	public SecureChannelSetup(Channel channel, PrivateKey privKey, PublicKey pubKey, Config config) {
 		this(channel, privKey, config);
-		this.pubKey = pubKey;
+		this.otherPubKey = pubKey;
 	}
 
 	private void initializeRSA() throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException {
@@ -82,12 +83,15 @@ public class SecureChannelSetup {
 			try {
 				Channel aesChannel = null;
 				clientChallenge = createChallenge();
-				sendAuthenticationRequest(username, clientChallenge);
-				String plainAnswer = receiveAuthenticationAnswer();
-				if(answerIsValid(plainAnswer, clientChallenge)) {
-					String[] splitAnswer = plainAnswer.split("\\s"); 
-					aesChannel = setupAES(splitAnswer);
-					sendAuthenticationAnswer(aesChannel, splitAnswer);
+				
+				sendFirstMessage(username, clientChallenge);
+				String receivedSecondMessage = receiveSecondMessage();
+				
+				if(secondMessageIsValid(receivedSecondMessage, clientChallenge)) {
+					String[] splitSecondMessage = receivedSecondMessage.split("\\s"); 
+					
+					aesChannel = setupClientAES(splitSecondMessage);
+					sendThirdMessage(aesChannel, splitSecondMessage);
 
 				} else {
 					channel.close();
@@ -111,28 +115,29 @@ public class SecureChannelSetup {
 		return randomBytes;
 	}
 
-	private void sendAuthenticationRequest(String username, byte[] clientChallenge) throws IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
+	private void sendFirstMessage(String username, byte[] clientChallenge) throws IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
 		String encodedClientChallenge = new String(Base64.encode(clientChallenge));
+		// !authenticate <username> <client challenge>
 		String request = String.format("!authenticate %s %s", username, encodedClientChallenge);
-		rsaCipher.init(Cipher.ENCRYPT_MODE, pubKey);
+		rsaCipher.init(Cipher.ENCRYPT_MODE, otherPubKey);
 		byte[] cipherText = rsaCipher.doFinal(request.getBytes());
 		channel.println(cipherText);
 	}
 
-	private String receiveAuthenticationAnswer() throws InvalidKeyException, IOException, IllegalBlockSizeException, BadPaddingException {
-		rsaCipher.init(Cipher.DECRYPT_MODE, privKey);
-		byte[] encryptedAnswer = channel.readByteLine();
-		return new String(rsaCipher.doFinal(encryptedAnswer));		
+	private String receiveSecondMessage() throws InvalidKeyException, IOException, IllegalBlockSizeException, BadPaddingException {
+		rsaCipher.init(Cipher.DECRYPT_MODE, ownPrivKey);
+		byte[] encryptedSecondMessage = channel.readByteLine();
+		return new String(rsaCipher.doFinal(encryptedSecondMessage));		
 	}
 
-	private Channel setupAES(String[] splitAnswer) throws NoSuchAlgorithmException, NoSuchPaddingException {
-		byte[] aesKey = getAESKey(splitAnswer);
-		byte[] aesIV = getAESIV(splitAnswer);
+	private Channel setupClientAES(String[] splitSecondMessage) throws NoSuchAlgorithmException, NoSuchPaddingException {
+		byte[] aesKey = getAESKey(splitSecondMessage);
+		byte[] aesIV = getAESIV(splitSecondMessage);
 
 		return new AESChannel(channel, new SecretKeySpec(aesKey, "AES"), aesIV, AES_CIPHER_STRING);
 	}
 
-	private boolean answerIsValid(String message, byte[] clientChallenge) {
+	private boolean secondMessageIsValid(String message, byte[] clientChallenge) {
 		if(message == null)
 			return false;
 
@@ -142,40 +147,51 @@ public class SecureChannelSetup {
 			return false;
 
 		String[] split = message.split("\\s");
-		if(!new String(Base64.encode(clientChallenge)).equals(split[1]))
+		if(!challengeResponseIsCorrect(clientChallenge, split[1]))
 			return false;
 		return true;
 	}
 
-	private byte[] getAESIV(String[] splitAnswer) {
-		return Base64.decode(splitAnswer[4]);
+	private boolean challengeResponseIsCorrect(byte[] challenge,
+			String responseToChallenge) {
+		return new String(Base64.encode(challenge)).equals(responseToChallenge);
 	}
 
-	private byte[] getAESKey(String[] splitAnswer) {
-		return Base64.decode(splitAnswer[3]);
+	private byte[] getAESIV(String[] splitSecondMessage) {
+		return Base64.decode(splitSecondMessage[4]);
 	}
 
-	private void sendAuthenticationAnswer(Channel aesChannel, String[] splitAnswer) {
-		aesChannel.println(splitAnswer[2]);
+	private byte[] getAESKey(String[] splitSecondMessage) {
+		return Base64.decode(splitSecondMessage[3]);
+	}
+
+	private void sendThirdMessage(Channel aesChannel, String[] splitSecondMessage) {
+		// <controller challenge>
+		aesChannel.println(splitSecondMessage[2]);
 	}
 	
 	public Channel awaitAuthentication() throws IOException {
 		if(successfullyInitialized) {
 			try {
-				String clearTextRequest = receiveRequest();
-				String[] splitRequest = clearTextRequest.split("\\s");
-				if(requestIsValid(clearTextRequest)) {
-					PublicKey userPublicKey = loadUserPublicKey(splitRequest[1]);
+				String clearFirstMessage = receiveFirstMessage();
+				String[] splitFirstMessage = clearFirstMessage.split("\\s");
+				
+				if(firstMessageIsValid(clearFirstMessage)) {
+					
+					PublicKey userPublicKey = loadUserPublicKey(splitFirstMessage[1]);
 					byte[] controllerChallenge = createChallenge();
+					
 					KeyGenerator aesKeyGen = KeyGenerator.getInstance("AES");
 					aesKeyGen.init(AES_KEY_LENGTH_IN_BITS);
 					SecretKey aesKey = aesKeyGen.generateKey();
 					byte[] aesIV = getRandomBytes(AES_IV_LENGTH_IN_BYTES);
-					sendOKAnswer(splitRequest[2], controllerChallenge, aesKey, aesIV, userPublicKey);
-					Channel aesChannel = setupAES(aesKey, aesIV);
-					String clearTextOKAnswer = receiveOKAnswer(aesChannel);
-					if(okAnswerIsValid(clearTextOKAnswer, controllerChallenge)) {
-						authenticatedUser = splitRequest[1];
+					
+					sendSecondMessage(splitFirstMessage[2], controllerChallenge, aesKey, aesIV, userPublicKey);
+					Channel aesChannel = setupControllerAES(aesKey, aesIV);
+					String clearThirdMessage = receiveThirdMessage(aesChannel);
+					if(thirdMessageIsValid(clearThirdMessage, controllerChallenge)) {
+						
+						authenticatedUsername = splitFirstMessage[1];
 						return aesChannel;
 					} else {
 						throw new IOException("Response from client to our challenge was invalid");
@@ -190,13 +206,13 @@ public class SecureChannelSetup {
 		throw new IOException("Authentication failed: Couldn't initialize secure channel!");
 	}
 
-	private String receiveRequest() throws IllegalBlockSizeException, BadPaddingException, InvalidKeyException, IOException {
-		rsaCipher.init(Cipher.DECRYPT_MODE, privKey);
-		byte[] encryptedRequest = channel.readByteLine();
-		return new String(rsaCipher.doFinal(encryptedRequest));
+	private String receiveFirstMessage() throws IllegalBlockSizeException, BadPaddingException, InvalidKeyException, IOException {
+		rsaCipher.init(Cipher.DECRYPT_MODE, ownPrivKey);
+		byte[] encryptedFirstMessage = channel.readByteLine();
+		return new String(rsaCipher.doFinal(encryptedFirstMessage));
 	}
 
-	private boolean requestIsValid(String request) {
+	private boolean firstMessageIsValid(String request) {
 		boolean requestIsValid = request.matches("!authenticate \\w+ ["+B64+"]{43}=");
 		assert requestIsValid : "1st message"; 
 		return requestIsValid;
@@ -209,33 +225,34 @@ public class SecureChannelSetup {
 		return Keys.readPublicPEM(new File(filePath));
 	}
 
-	private void sendOKAnswer(String encodedClientChallenge, byte[] controllerChallenge, SecretKey aesKey, byte[] aesIV, PublicKey userPublicKey) throws InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+	private void sendSecondMessage(String encodedClientChallenge, byte[] controllerChallenge, SecretKey aesKey, byte[] aesIV, PublicKey userPublicKey) throws InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
 		String encodedControllerChallenge = new String(Base64.encode(controllerChallenge));
 		String encodedAesKey = new String(Base64.encode(aesKey.getEncoded()));
 		String encodedAesIV = new String(Base64.encode(aesIV));
-		String answer = String.format("!ok %s %s %s %s", encodedClientChallenge, encodedControllerChallenge, encodedAesKey, encodedAesIV);
+		// !ok <client challenge> <controller challenge> <aes key> <aes initialization vector>
+		String secondMessage = String.format("!ok %s %s %s %s", encodedClientChallenge, encodedControllerChallenge, encodedAesKey, encodedAesIV);
 		
 		rsaCipher.init(Cipher.ENCRYPT_MODE, userPublicKey);
 		
-		byte[] cipherText = rsaCipher.doFinal(answer.getBytes());
+		byte[] cipherText = rsaCipher.doFinal(secondMessage.getBytes());
 		channel.println(cipherText);
 	}
 
-	private Channel setupAES(SecretKey aesKey, byte[] aesIV) throws NoSuchAlgorithmException, NoSuchPaddingException {
+	private Channel setupControllerAES(SecretKey aesKey, byte[] aesIV) throws NoSuchAlgorithmException, NoSuchPaddingException {
 		return new AESChannel(channel, aesKey, aesIV, AES_CIPHER_STRING);
 	}
 
-	private String receiveOKAnswer(Channel aesChannel) throws IOException {
+	private String receiveThirdMessage(Channel aesChannel) throws IOException {
 		return aesChannel.readStringLine();
 	}
 
-	private boolean okAnswerIsValid(String clearTextOKAnswer, byte[] controllerChallenge) {
-		boolean okAnswerIsValid = clearTextOKAnswer.matches("["+B64+"]{43}=");
-		assert okAnswerIsValid :  "3rd message";
-		return okAnswerIsValid && new String(Base64.encode(controllerChallenge)).equals(clearTextOKAnswer);
+	private boolean thirdMessageIsValid(String clearThirdMessage, byte[] controllerChallenge) {
+		boolean thirdMessageIsValid = clearThirdMessage.matches("["+B64+"]{43}=");
+		assert thirdMessageIsValid :  "3rd message";
+		return thirdMessageIsValid && challengeResponseIsCorrect(controllerChallenge, clearThirdMessage);
 	}
 
-	public String getAuthenticatedUser() {
-		return authenticatedUser;
+	public String getAuthenticatedUsername() {
+		return authenticatedUsername;
 	}
 }
