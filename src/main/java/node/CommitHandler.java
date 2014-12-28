@@ -78,7 +78,7 @@ public class CommitHandler extends TerminableThread {
 			byte[] buffer = new byte[4096];
 			DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 
-			datagramSocket.setSoTimeout(5000);
+			datagramSocket.setSoTimeout(10000);
 			datagramSocket.receive(packet);
 
 			String message = new String(packet.getData());
