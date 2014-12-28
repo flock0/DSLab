@@ -3,6 +3,7 @@ package node;
 import util.Config;
 import util.NodeLogger;
 import util.TerminableThread;
+import util.FixedParameters;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,7 +32,10 @@ public class Node implements INodeCli, Runnable {
 	private Timer aliveTimer = null;
 	private TerminableThread listener = null;
 	private TerminableThread commit = null;
+	
 	private boolean successfullyInitialized = false;
+	private boolean timedout = false;
+	private int commitCount;
 	private int resources;
 	/**
 	 * @param componentName
@@ -57,6 +61,7 @@ public class Node implements INodeCli, Runnable {
 			initializeListener();
 			aliveTimer = new Timer();
 			initializeShell();
+			commitCount = 0;
 			joinCloud();
 		} catch (IOException e) {
 			System.out.println("Couldn't create ServerSocket: " + e.getMessage());
@@ -175,6 +180,21 @@ public class Node implements INodeCli, Runnable {
 
 	public void updateResources(int resources) {
 		this.resources = resources;
+	}
+	
+	public void timeout() {
+		timedout = true;
+		if(++commitCount < FixedParameters.MAX_NODE_COMMIT_TRIES) {
+			try {
+				joinCloud();
+			} catch (IOException e) {
+				System.out.println("ServerSocket failing: " + e.getMessage());
+			}
+		} else {
+			System.out.println("Cloud controller is not online. "
+					+ "Try again at a later time. Node is shutting down!");
+			new Thread(this).start();
+		}
 	}
 
 	@Override
