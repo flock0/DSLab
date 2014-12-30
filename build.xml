@@ -51,10 +51,10 @@
 		</java>
 	</target>
 
-	<target name="run-admin" depends="compile" description="Run admin console">
-		<java classname="admin.AdminConsole" fork="true" classpathref="project.classpath">
-			<arg value="admin" />		
-		</java>
+	<target name="run-admin" depends="compile" description="Run Admin-Console.">
+	   <java classname="admin.AdminConsole" fork="true" classpathref="project.classpath">
+	     <arg value="admin" />
+	   </java>
 	</target>
 	
 	<target name="run-node1" depends="compile" description="Run 1st Node.">
