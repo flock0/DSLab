@@ -71,21 +71,21 @@ public class AdminConsole implements IAdminConsole, Runnable {
 		
 	}
 	
-	private void shutdown() {		
-		if(shell != null)
-			shell.close();		
-		if(callbackStub != null)
+	private void shutdown() {			
+		if(callback != null)
 		{
 			try
 			{
-				UnicastRemoteObject.unexportObject(callbackStub, true);
+				UnicastRemoteObject.unexportObject(callback, true);
 			}
 			catch(NoSuchObjectException e)
 			{
 				//Log somewhere...
 				//throw new RuntimeException("NoSuchObjectException during shutdown.", e);
-			}
+			}			
 		}
+		if(shell != null)
+			shell.close();		
 	}
 	
 	@Command
