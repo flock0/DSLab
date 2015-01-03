@@ -6,6 +6,7 @@ import util.Config;
 import util.NodeLogger;
 import channels.Channel;
 import channels.ComputationCommunicator;
+import computation.CommitRequest;
 import computation.ComputationResult;
 import computation.ComputationUnit;
 import computation.ComputationUnitFactory;
@@ -15,6 +16,8 @@ import computation.NodeRequest;
 import computation.Request;
 import computation.Result;
 import computation.ResultStatus;
+import computation.ShareRequest;
+import computation.ShareResult;
 
 public class SingleComputationHandler implements Runnable {
 
@@ -43,6 +46,13 @@ public class SingleComputationHandler implements Runnable {
 				NodeLogger.log(nr, (ComputationResult)result);
 			} else if(request instanceof LogRequest){
 				result = new LogResult(ResultStatus.OK, node.getLogs());
+			} else if(request instanceof ShareRequest){
+				ShareRequest sr = (ShareRequest)request;
+				result = new ShareResult(ResultStatus.OK, (node.getRmin() <= sr.getResources()));
+			} else if(request instanceof CommitRequest){
+				CommitRequest cr = (CommitRequest)request;
+				handleCommit(cr.getResources());
+				result = new Result(ResultStatus.OK);
 			}
 			else
 			{
@@ -50,12 +60,16 @@ public class SingleComputationHandler implements Runnable {
 			}
 			channel.sendResult(result);
 			
-			
 		} catch (IOException e) {
 			System.out.println("Error on getting request: " + e.getMessage());
 		} finally {
 			channel.close();
 		}
 		
+	}
+	
+	private void handleCommit(int resources) {
+		if(resources >= 0)
+			node.updateResources(resources);
 	}
 }

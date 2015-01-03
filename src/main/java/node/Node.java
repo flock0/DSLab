@@ -3,6 +3,7 @@ package node;
 import util.Config;
 import util.NodeLogger;
 import util.TerminableThread;
+import util.FixedParameters;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,7 +31,12 @@ public class Node implements INodeCli, Runnable {
 	private Shell shell = null;
 	private Timer aliveTimer = null;
 	private TerminableThread listener = null;
+	private TerminableThread commit = null;
+	
 	private boolean successfullyInitialized = false;
+	private boolean timedout = false;
+	private int commitCount;
+	private int resources;
 	/**
 	 * @param componentName
 	 *            the name of the component - represented in the prompt
@@ -47,15 +53,16 @@ public class Node implements INodeCli, Runnable {
 		this.config = config;
 		this.userRequestStream = userRequestStream;
 		this.userResponseStream = userResponseStream;
-		
+
 		try {
 			NodeLogger.NodeID = componentName;
 			NodeLogger.Directory = config.getString("log.dir");
-			
+
 			initializeListener();
 			aliveTimer = new Timer();
 			initializeShell();
-			successfullyInitialized = true;
+			commitCount = 0;
+			joinCloud();
 		} catch (IOException e) {
 			System.out.println("Couldn't create ServerSocket: " + e.getMessage());
 		}
@@ -70,12 +77,35 @@ public class Node implements INodeCli, Runnable {
 		shell.register(this);
 	}
 
+	private void joinCloud() throws IOException {
+		System.out.println("Trying to join cloud...");
+		commit = new CommitHandler(this, config);
+		commit.start();
+	}
+
+	public void finishInitialization(boolean result) {
+		successfullyInitialized = result;
+		if(!successfullyInitialized) {
+			System.out.println("Can't join cloud, shutting down!");
+			commit.shutdown();
+			new Thread(this).start();
+		} else {
+			// make sure everything is shut down before 
+			// starting shell and all the listeners
+			commit.shutdown();
+			new Thread(this).start();
+		}
+	}
+
 	@Override
 	public void run() {
 		if(successfullyInitialized) {
 			startAliveTimer();
 			startRequestListener();
 			startShell();
+		} else {
+			shutdown();
+			Thread.currentThread().interrupt();
 		}
 	}
 
@@ -106,7 +136,7 @@ public class Node implements INodeCli, Runnable {
 			aliveTimer.cancel();
 		if(shell != null)
 			shell.close();
-		
+
 	}
 
 	public List<ComputationRequestInfo> getLogs()
@@ -138,12 +168,35 @@ public class Node implements INodeCli, Runnable {
 			}
 			catch(IOException e)
 			{
-				 throw new RuntimeException("IOException during getLogs.", e);
+				throw new RuntimeException("IOException during getLogs.", e);
 			}
 		}
 		return returnList;
 	}
+
+	public int getRmin() {
+		return config.getInt("node.rmin");
+	}
+
+	public void updateResources(int resources) {
+		this.resources = resources;
+	}
 	
+	public void timeout() {
+		timedout = true;
+		if(++commitCount < FixedParameters.MAX_NODE_COMMIT_TRIES) {
+			try {
+				joinCloud();
+			} catch (IOException e) {
+				System.out.println("ServerSocket failing: " + e.getMessage());
+			}
+		} else {
+			System.out.println("Cloud controller is not online. "
+					+ "Try again at a later time. Node is shutting down!");
+			new Thread(this).start();
+		}
+	}
+
 	@Override
 	public String history(int numberOfRequests) throws IOException {
 		// TODO Auto-generated method stub
@@ -157,18 +210,16 @@ public class Node implements INodeCli, Runnable {
 	 */
 	public static void main(String[] args) {
 		Node node = new Node(args[0], new Config(args[0]), System.in,
-				System.out);
-		new Thread(node).start();
-		
+				System.out);		
 	}
 
 	// --- Commands needed for Lab 2. Please note that you do not have to
 	// implement them for the first submission. ---
 
 	@Override
+	@Command
 	public String resources() throws IOException {
-		// TODO Auto-generated method stub
-		return null;
+		return String.valueOf(resources);
 	}
 
 }
