@@ -45,7 +45,7 @@ public class CommitHandler extends TerminableThread {
 	}
 
 	private void constructPacket() throws UnknownHostException {
-		byte[] messageBuffer = "hello".getBytes();
+		byte[] messageBuffer = "!hello".getBytes();
 		helloPacket = new DatagramPacket(messageBuffer, messageBuffer.length,
 				InetAddress.getByName(config.getString("controller.host")),
 				config.getInt("controller.udp.port"));
@@ -111,20 +111,24 @@ public class CommitHandler extends TerminableThread {
 			} else {
 				// send !share <resources> to all active nodes
 				int res = (int) Math.floor(rmax/(onlineNodes.size()+1));
-				channelSet = new ChannelSet();
-				threadPool = Executors.newFixedThreadPool(onlineNodes.size());
-				try {
-					for(int i = 0; i < onlineNodes.size(); i++) {
-						Channel channel = new TcpChannel(
-								new Socket(onlineNodes.get(i).getIPAddress().getHostAddress(), 
-										onlineNodes.get(i).getTCPPort()));
-						channelSet.add(channel);
-						threadPool.execute(new SingleShareHandler(channel, this, res));
+				if(node.getRmin() > res) {
+					node.finishInitialization(false);
+				} else {
+					channelSet = new ChannelSet();
+					threadPool = Executors.newFixedThreadPool(onlineNodes.size());
+					try {
+						for(int i = 0; i < onlineNodes.size(); i++) {
+							Channel channel = new TcpChannel(
+									new Socket(onlineNodes.get(i).getIPAddress().getHostAddress(), 
+											onlineNodes.get(i).getTCPPort()));
+							channelSet.add(channel);
+							threadPool.execute(new SingleShareHandler(channel, this, res));
+						}
+					} catch (UnknownHostException e) {
+						System.out.println("Couldn't resolve IP address: " + e.getMessage());
+					} catch (IOException e) {
+						System.out.println("Couldn't create socket: " + e.getMessage());
 					}
-				} catch (UnknownHostException e) {
-					System.out.println("Couldn't resolve IP address: " + e.getMessage());
-				} catch (IOException e) {
-					System.out.println("Couldn't create socket: " + e.getMessage());
 				}
 			}
 		}

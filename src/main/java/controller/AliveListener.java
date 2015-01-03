@@ -90,7 +90,7 @@ public class AliveListener extends TerminableThread {
 	
 	private boolean isHelloMessage() {
 		return splitMessage.length == 1
-				&& splitMessage[0].equals("hello");
+				&& splitMessage[0].equals("!hello");
 	}
 
 	private boolean messageIsValid() {
