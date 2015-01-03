@@ -47,7 +47,9 @@ public class AliveListener extends TerminableThread {
 					String aliveMessage = new String(packet.getData());
 					splitMessage = aliveMessage.trim().split("\\s");
 
-					if (messageIsValid())
+					if (isHelloMessage()) {
+						sendHelloReply();
+					} else if (messageIsValid())
 						updateActiveNodes();
 				}
 			} catch (SocketException e) {
@@ -67,6 +69,30 @@ public class AliveListener extends TerminableThread {
 		lastAliveTimestamp = System.currentTimeMillis();
 
 		return packet;
+	}
+	
+	private void sendHelloReply() throws IOException {
+		DatagramSocket replySocket = new DatagramSocket();
+		
+		String replyMessage = "!init ";
+		for(Node n : allNodes.values()) {
+			if(n.isOnline()) {
+				replyMessage += n.getIPAddress() + ":" + n.getTCPPort() + " ";
+			}
+		}
+		replyMessage += config.getInt("controller.rmax");
+		
+		byte[] buffer = replyMessage.getBytes();
+		
+		DatagramPacket replyPacket = new DatagramPacket(
+		        buffer, buffer.length, packet.getAddress(), packet.getPort());
+		replySocket.send(replyPacket);
+		replySocket.close();
+	}
+	
+	private boolean isHelloMessage() {
+		return splitMessage.length == 1
+				&& splitMessage[0].equals("hello");
 	}
 
 	private boolean messageIsValid() {
