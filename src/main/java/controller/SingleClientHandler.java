@@ -3,6 +3,7 @@ package controller;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
+import java.security.PrivateKey;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -12,6 +13,7 @@ import java.util.concurrent.ConcurrentSkipListSet;
 
 import util.Config;
 import util.FixedParameters;
+import util.SecureChannelSetup;
 import channels.Channel;
 import channels.ChannelSet;
 import channels.ClientCommunicator;
@@ -30,60 +32,86 @@ public class SingleClientHandler implements Runnable {
 	private User currentUser = null;
 	private ComputationCommunicator currentComputationCommunicator = null;
 	private boolean sessionIsBeingTerminated = false;
+	private boolean successfullyInitialized = false;
+	private Channel underlyingChannel; // The original underlying channel
 	private ChannelSet openChannels;
 	private HashMap<Character, Long> statistic;
+	private PrivateKey controllerPrivateKey;
 
 	public SingleClientHandler(
 			Channel channel,
 			ConcurrentHashMap<Character, ConcurrentSkipListSet<Node>> activeNodes,
-			ConcurrentHashMap<String, User> users, ChannelSet openChannels, Config config,
+			ConcurrentHashMap<String, User> users, PrivateKey controllerPrivateKey, ChannelSet openChannels, Config config,
 			HashMap<Character, Long> statistic) {
 		this.config = config;
 		this.activeNodes = activeNodes;
 		this.users = users;
+		this.controllerPrivateKey = controllerPrivateKey;
 		this.openChannels = openChannels;
-		this.communicator = new ClientCommunicator(channel);
+		this.underlyingChannel = channel;
 		this.statistic = statistic;
+		
+		try {
+			authenticateClient();
+		} catch(IOException e) {
+			channel.close();
+		}
+	}
+	
+	private void authenticateClient() throws IOException {
+		SecureChannelSetup auth = new SecureChannelSetup(underlyingChannel, controllerPrivateKey, config);
+		Channel aesChannel = auth.awaitAuthentication();
+		this.communicator = new ClientCommunicator(aesChannel);
+		currentUser = users.get(auth.getAuthenticatedUsername());
+		currentUser.increaseOnlineCounter();
+		successfullyInitialized = true;
 	}
 
 	@Override
 	public void run() {
-		try {
-			while (true) {
-				ClientRequest request = communicator.getRequest();
-
-				switch (request.getType()) {
-				case Login:
-					communicator.sendAnswer(handleLogin(request));
-					break;
-				case Logout:
-					communicator.sendAnswer(handleLogout());
-					break;
-				case Credits:
-					communicator.sendAnswer(handleCredits());
-					break;
-				case Buy:
-					communicator.sendAnswer(handleBuy(request));
-					break;
-				case List:
-					communicator.sendAnswer(handleList());
-					break;
-				case Compute:
-					communicator.sendAnswer(handleCompute(request));
-					break;
-				default:
-					break; // Skip invalid requests
+		/*
+		 * Only read commands via the encrypted channel when
+		 * we are successfully initialized and have a user
+		 * currently authenticated.
+		 */
+		if(successfullyInitialized && isLoggedIn()) {
+			try {
+				while (true) {
+					ClientRequest request = communicator.getRequest();
+	
+					switch (request.getType()) {
+					case Login:
+						communicator.sendAnswer(handleLogin(request));
+						break;
+					case Logout:
+						communicator.sendAnswer(handleLogout());
+						authenticateClient();
+						break;
+					case Credits:
+						communicator.sendAnswer(handleCredits());
+						break;
+					case Buy:
+						communicator.sendAnswer(handleBuy(request));
+						break;
+					case List:
+						communicator.sendAnswer(handleList());
+						break;
+					case Compute:
+						communicator.sendAnswer(handleCompute(request));
+						break;
+					default:
+						break; // Skip invalid requests
+					}
 				}
+			} catch (SocketException e) {
+				sessionIsBeingTerminated = true;
+				System.out.println("Socket to client closed: " + e.getMessage());
+			} catch (IOException e) {
+				System.out.println("Error on getting request: " + e.getMessage());
+			} finally {
+				logoutAndClose();
 			}
-		} catch (SocketException e) {
-			sessionIsBeingTerminated = true;
-			System.out.println("Socket to client closed: " + e.getMessage());
-		} catch (IOException e) {
-			System.out.println("Error on getting request: " + e.getMessage());
-		} finally {
-			logoutAndClose();
 		}
-
 	}
 
 	private String handleLogin(ClientRequest request) {
@@ -135,7 +163,11 @@ public class SingleClientHandler implements Runnable {
 	private String handleList() {
 		if (!isLoggedIn())
 			return "You need to log in first.";
-		return getAvailableOperators();
+		String availableOperators = getAvailableOperators();
+		if(availableOperators.isEmpty())
+			return " "; // Avoid issues that occur when AES-decrypting empty strings
+		else
+			return getAvailableOperators();
 	}
 
 	private String getAvailableOperators() {
@@ -147,13 +179,13 @@ public class SingleClientHandler implements Runnable {
 					builder.append(operator);
 		}
 		return builder.toString();
-	}	
+	}
 
 	private String handleCompute(ClientRequest request) throws IOException {
 		
-		//// Prerequisites ////		
+		//// Prerequisites ////
 		if (!isLoggedIn())
-			return "You need to log in first.";		
+			return "You need to log in first.";
 		if (!currentUser.hasEnoughCredits(request))
 			return "Not enough credits!";
 		
@@ -164,14 +196,14 @@ public class SingleClientHandler implements Runnable {
 			return "Error: Operators unsupported!";
 
 		//// Declarations ////
-		int[] operands = request.getOperands();		
+		int[] operands = request.getOperands();
 		final int totalOperatorCount = operators.length;
 		final int totalOperandCount = operands.length;
 		int remainingOperationsCount = totalOperatorCount;
 		int firstOperand = operands[0];
 		int secondOperand;
-		char nextOperator;	
-		
+		char nextOperator;
+
 		try {
 			while (remainingOperationsCount != 0) {
 
@@ -281,7 +313,7 @@ public class SingleClientHandler implements Runnable {
 		int usageCost = calculateUsageCost(result);
 		synchronized(node) {
 			synchronized(activeNodes) {
-				// Remove Node from all Operator Sets, change the Usage value and readd.
+				// Remove Node from all Operator Sets, change the Usage value and re-add.
 				List<ConcurrentSkipListSet<Node>> setsWithNodes = new ArrayList<>();
 				for(ConcurrentSkipListSet<Node> operatorSet : activeNodes.values()) {
 					if(operatorSet.contains(node))

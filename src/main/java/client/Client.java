@@ -1,16 +1,22 @@
 package client;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 
+import util.Config;
+import util.Keys;
+import util.SecureChannelSetup;
+import util.SecurityUtils;
 import channels.Channel;
 import channels.TcpChannel;
 import cli.Command;
 import cli.Shell;
-import util.Config;
 
 public class Client implements IClientCli, Runnable {
 
@@ -18,10 +24,13 @@ public class Client implements IClientCli, Runnable {
 	private Config config;
 	private InputStream userRequestStream;
 	private PrintStream userResponseStream;
-	private Channel channel = null;
+	private Channel underlyingChannel = null; // The original underlying channel
+	private Channel channel = null; // The channel that may be decorated during a session with e.g. AES encryption
 	private Shell shell;
+	private PublicKey controllerPublicKey;
 	private boolean successfullyInitialized = false;
-
+	private boolean authenticated = false;
+	
 	/**
 	 * @param componentName
 	 *            the name of the component - represented in the prompt
@@ -37,21 +46,29 @@ public class Client implements IClientCli, Runnable {
 		this.componentName = componentName;
 		this.config = config;
 		this.userRequestStream = userRequestStream;
-		this.userResponseStream = userResponseStream;
-
+		this.userResponseStream = userResponseStream;		
+		
 		try {
+			SecurityUtils.registerBouncyCastle();
+			loadControllerPublicKey();
 			initializeSocket();
 			initializeShell();
 			successfullyInitialized = true;
 		} catch (UnknownHostException e) {
 			System.out.println("Couldn't resolve IP address: " + e.getMessage());
 		} catch (IOException e) {
-			System.out.println("Couldn't create socket: " + e.getMessage());
+			System.out.println("Couldn't initialize client: " + e.getMessage());
 		}
 	}
 
+	private void loadControllerPublicKey() throws IOException {
+		String filePath = System.getProperty("user.dir") + File.separator + config.getString("controller.key");
+		filePath = filePath.replace("/", File.separator);
+		controllerPublicKey = Keys.readPublicPEM(new File(filePath));
+	}
+
 	private void initializeSocket() throws UnknownHostException, IOException {
-		channel = new TcpChannel(new Socket(config.getString("controller.host"), config.getInt("controller.tcp.port")));
+		underlyingChannel = channel = new TcpChannel(new Socket(config.getString("controller.host"), config.getInt("controller.tcp.port")));
 	}
 
 	private void initializeShell() {
@@ -70,43 +87,60 @@ public class Client implements IClientCli, Runnable {
 	@Override
 	@Command
 	public String login(String username, String password) throws IOException {
-		channel.println(String.format("!login %s %s", username, password));
-		return channel.readLine();
+		throw new UnsupportedOperationException("!login command not used in lab 2. Use !authenticate <username>");
 	}
 
 	@Override
 	@Command
 	public String logout() throws IOException {
-		channel.println("!logout");
-		return channel.readLine();
+		if(authenticated) {
+			authenticated = false;
+			channel.println("!logout");
+			String response = channel.readStringLine();
+			channel = underlyingChannel; // Move from the encrypted channel back to the unencrypted
+			return response;
+		} else
+			return "Currently not logged in. Please !authenticate first";
 	}
 
 	@Override
 	@Command
 	public String credits() throws IOException {
-		channel.println("!credits");
-		return channel.readLine();
+		if(authenticated) {
+			channel.println("!credits");
+			return channel.readStringLine();
+		} else
+			return "Currently not logged in. Please !authenticate first";
 	}
 
 	@Override
 	@Command
 	public String buy(long credits) throws IOException {
+		if(authenticated) {
 		channel.println(String.format("!buy %d", credits));
-		return channel.readLine();
+		return channel.readStringLine();
+		} else
+			return "Currently not logged in. Please !authenticate first";
 	}
 
 	@Override
 	@Command
 	public String list() throws IOException {
-		channel.println("!list");
-		return channel.readLine();
+		if(authenticated) {
+			channel.println("!list");
+			return channel.readStringLine();
+		} else
+			return "Currently not logged in. Please !authenticate first";
 	}
 
 	@Override
 	@Command
 	public String compute(String term) throws IOException {
-		channel.println(String.format("!compute %s", term));
-		return channel.readLine();
+		if(authenticated) {
+			channel.println(String.format("!compute %s", term));
+			return channel.readStringLine();
+		} else
+			return "Currently not logged in. Please !authenticate first";
 	}
 
 	@Override
@@ -127,13 +161,28 @@ public class Client implements IClientCli, Runnable {
 		new Thread(client).start();
 	}
 
-	// --- Commands needed for Lab 2. Please note that you do not have to
-	// implement them for the first submission. ---
-
+	@Command
 	@Override
 	public String authenticate(String username) throws IOException {
-		// TODO Auto-generated method stub
-		return null;
+		if(!authenticated) {
+			PrivateKey userPrivateKey = loadUserPrivateKey(username);
+			SecureChannelSetup auth = new SecureChannelSetup(channel, userPrivateKey, controllerPublicKey, config);
+			Channel aesChannel = auth.authenticate(username);
+			if(aesChannel == null)
+				return "Authentication error!";
+			else {
+				authenticated = true;
+				channel = aesChannel;
+				return "Successfully logged in as " + username;
+			}
+		} else
+			return "Currently already logged in. Please !logout first";
 	}
 
+	private PrivateKey loadUserPrivateKey(String username) throws IOException {
+		String filePath = System.getProperty("user.dir") + File.separator + config.getString("keys.dir")
+				+ File.separator + username + ".pem";
+		filePath = filePath.replace("/", File.separator);
+		return Keys.readPrivatePEM(new File(filePath));
+	}
 }

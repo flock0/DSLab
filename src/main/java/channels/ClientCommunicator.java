@@ -3,7 +3,6 @@ package channels;
 import java.io.IOException;
 
 import computation.ComputationRequestType;
-
 import controller.ClientRequest;
 
 /**
@@ -19,7 +18,7 @@ public class ClientCommunicator {
 	}
 	
 	public ClientRequest getRequest() throws IOException {
-		String message = underlying.readLine();
+		String message = underlying.readStringLine();
 		
 		String[] split = message.split("\\s");
 		
@@ -36,6 +35,8 @@ public class ClientCommunicator {
 			return validateList(split);
 		case "!compute":
 			return validateCompute(split);
+		case "!authenticate":
+			return validateAuthenticate(split);
 		default:
 			underlying.println("Error: Unknown command");
 			ClientRequest request = new ClientRequest();
@@ -131,6 +132,15 @@ public class ClientCommunicator {
 		return request;
 	}
 	
+	private ClientRequest validateAuthenticate(String[] split) {
+		// We use the ClientCommunicator only when we are already authenticated.
+		// So at this point we would only need to return a simple message.
+		ClientRequest request = new ClientRequest();
+		request.setType(ComputationRequestType.Invalid);
+		underlying.println("Already authenticated");
+		return request;
+	}
+
 	private boolean isInteger(String s) {
 		try {
 			Integer.parseInt(s);

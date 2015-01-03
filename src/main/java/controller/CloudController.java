@@ -1,15 +1,18 @@
 package controller;
 
-import util.Config;
+import java.io.File;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.LinkedHashMap;
+import java.security.PrivateKey;
 import java.util.Timer;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
-
+import util.Config;
+import util.Keys;
+import util.SecurityUtils;
 import cli.Command;
 import cli.Shell;
 
@@ -29,6 +32,7 @@ public class CloudController implements ICloudControllerCli, Runnable {
 	private boolean successfullyInitialized = false;	
 	private AdminService adminService = null;
 	private LinkedHashMap<Character, Long> statistic;
+	private PrivateKey controllerPrivateKey;
 
 	/**
 	 * @param componentName
@@ -51,14 +55,22 @@ public class CloudController implements ICloudControllerCli, Runnable {
 			statistic = new LinkedHashMap<Character, Long>();
 			nodePurgeTimer = new Timer();
 			Node.TimeoutPeriod = config.getInt("node.timeout");
+			SecurityUtils.registerBouncyCastle();
+			loadControllerPrivateKey();
 			loadUsers();
 			initializeNodeMaps();
 			initializeListeners();
 			initializeShell();
 			successfullyInitialized = true;
 		} catch (IOException e) {
-			System.out.println("Couldn't create socket: " + e.getMessage());
+			System.out.println("Couldn't initialize controller: " + e.getMessage());
 		}
+	}
+
+	private void loadControllerPrivateKey() throws IOException {
+		String filePath = System.getProperty("user.dir") + File.separator + config.getString("key");
+		filePath = filePath.replace("/", File.separator);
+		controllerPrivateKey = Keys.readPrivatePEM(new File(filePath));		
 	}
 
 	private void loadUsers() {
@@ -82,7 +94,7 @@ public class CloudController implements ICloudControllerCli, Runnable {
 
 	private void initializeListeners() throws IOException {
 		aliveListener = new AliveListener(activeNodes, allNodes, config);
-		clientListener = new ClientListener(users, activeNodes, config, statistic);
+		clientListener = new ClientListener(users, activeNodes, controllerPrivateKey, config, statistic);
 	}
 	
 	private void initializeShell() {
@@ -109,7 +121,7 @@ public class CloudController implements ICloudControllerCli, Runnable {
 	}
 
 	private void startNodePurgeTimer() {
-		nodePurgeTimer.schedule(new NodePurgeTask(activeNodes, config), 0, config.getInt("node.checkPeriod"));
+		nodePurgeTimer.schedule(new NodePurgeTask(activeNodes), 0, config.getInt("node.checkPeriod"));
 	}
 
 	private void startListeners() {

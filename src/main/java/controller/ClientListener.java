@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.SocketException;
 import java.util.HashMap;
+import java.security.PrivateKey;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutorService;
@@ -27,18 +28,20 @@ public class ClientListener extends TerminableThread {
 	private ExecutorService threadPool;
 	private ConcurrentHashMap<Character, ConcurrentSkipListSet<Node>> activeNodes;
 	private ConcurrentHashMap<String, User> users;
+	private PrivateKey controllerPrivateKey = null;
 	private ChannelSet openChannels; // Keeps track of all open channels for clients or nodes. Used for shutdown 
 	private HashMap<Character, Long> statistic;
 
-	public ClientListener(ConcurrentHashMap<String, User> users, ConcurrentHashMap<Character, ConcurrentSkipListSet<Node>> activeNodes, Config config, HashMap<Character, Long> statistic) throws IOException {
+	public ClientListener(ConcurrentHashMap<String, User> users, ConcurrentHashMap<Character, ConcurrentSkipListSet<Node>> activeNodes, PrivateKey controllerPrivateKey, Config config, HashMap<Character, Long> statistic) throws IOException {
 		this.users = users;
 		this.activeNodes = activeNodes;
 		this.config = config;
+		this.controllerPrivateKey = controllerPrivateKey;
+		this.statistic = statistic;
 		
 		openServerSocket();
 		createThreadPool();
 		openChannels = new ChannelSet();
-		this.statistic = statistic;
 	}
 
 	private void openServerSocket() throws IOException {
@@ -56,7 +59,7 @@ public class ClientListener extends TerminableThread {
 				while (true) {
 					Channel nextRequest = new TcpChannel(serverSocket.accept());
 					openChannels.add(nextRequest);
-					threadPool.execute(new SingleClientHandler(nextRequest, activeNodes, users, openChannels, config, statistic));					
+					threadPool.execute(new SingleClientHandler(nextRequest, activeNodes, users, controllerPrivateKey, openChannels, config, statistic));					
 					openChannels.cleanUp(); // Make a semi-regular clean up
 				}
 			} catch (SocketException e) {

@@ -42,7 +42,7 @@ public class ComputationCommunicator{
 	 * Gets the next computation request
 	 */
 	public Request getRequest() throws IOException {
-		String message = underlying.readLine();
+		String message = underlying.readStringLine();
 		if(message != null && message.startsWith("!compute "))		
 			return new NodeRequest(message.substring(9).split("\\s"));		
 		if(message != null && message.equals("!getLogs"))		
@@ -51,7 +51,7 @@ public class ComputationCommunicator{
 	}
 	
 	public Result getResult() throws IOException {
-		String response = underlying.readLine();
+		String response = underlying.readStringLine();
 		if(response.startsWith("!logs "))
 			return LogResult.fromString(response);
 		else

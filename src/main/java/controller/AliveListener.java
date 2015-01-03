@@ -20,7 +20,6 @@ public class AliveListener extends TerminableThread {
 	private DatagramPacket packet = null;
 	private long lastAliveTimestamp;
 	private String[] splitMessage = null;
-	private final long timeoutPeriod;
 
 	public AliveListener(
 			ConcurrentHashMap<Character, ConcurrentSkipListSet<Node>> activeNodes,
@@ -29,7 +28,6 @@ public class AliveListener extends TerminableThread {
 		this.allNodes = allNodes;
 		this.config = config;
 		
-		timeoutPeriod = config.getInt("node.timeout");
 		openUDPSocket();
 	}
 
