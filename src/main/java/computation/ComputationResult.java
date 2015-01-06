@@ -13,9 +13,9 @@ public class ComputationResult extends Result {
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		builder.append(status);
-		builder.append(" ");
 		builder.append(number);
+		builder.append(" ");
+		builder.append(status);
 		return builder.toString();
 	}
 
@@ -24,6 +24,9 @@ public class ComputationResult extends Result {
 		switch(status) {
 		case OK:
 			builder.append(number);
+			break;
+		case Tampered:
+			builder.append("Message has been tampered with");
 			break;
 		case DivisionByZero:
 			builder.append("Error: division by 0");
