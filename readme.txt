@@ -15,3 +15,11 @@ Ein paar Worte zu den wichtigsten Komponenten:
   - Geschieht entweder auf Node- oder auf HashMap-Ebene.
   - Node-Objekte sind synchronisiert, falls eine Alive-Nachricht eintrifft oder eine Zeitüberschreitungen eingetreten ist. (So kann niemals der Zustand eintreten, dass ein Node nur bei manchen Operator-Listen bei den aktiven Nodes drinnen ist.)
   - Die HashMap der aktiven Nodes ist ebenfalls an einigen Stellen synchronisiert, damit Änderungen durch Zeitüberschreitungen oder neue Nodes konsistent gespeichert sind.
+
+- Secure Channel:
+  - Die Klasse SecureChannelSetup stellt Methoden für Client und Controller bereit, um die Authentifizierung mit RSA durchzuführen. Danach wird von RSA auf AES gewechselt.
+  - Die AES- und Base64-Funktionalität wurde mittels Decorator Pattern umgesetzt.
+  - Der !login-Command wird nun nicht mehr unterstützt.
+  - Solange der Client nicht authentifiziert ist, sind keine Commands (außer !authenticate) möglich.
+  - Solange der Client nicht authentifiziert ist, ist die Verbindung unverschlüsselt. Nach einem !authenticate ist sie - wie gefordert - verschlüsselt. Kommt dann ein !logout, wird die AES-Verschlüsselung wieder entfernt.
+ 
