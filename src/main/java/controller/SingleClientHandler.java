@@ -20,7 +20,7 @@ import channels.Channel;
 import channels.ChannelSet;
 import channels.ClientCommunicator;
 import channels.ComputationCommunicator;
-import channels.HMACChannel;
+import channels.ComputeHMACChannel;
 import channels.TcpChannel;
 import computation.ComputationResult;
 import computation.NodeRequest;
@@ -230,7 +230,7 @@ public class SingleClientHandler implements Runnable {
 					if(nextNodeToTry.isOnline()) {
 						currentComputationCommunicator = null;
 						try {
-							Channel channelForCommunicator = new HMACChannel(
+							Channel channelForCommunicator = new ComputeHMACChannel(
 																new TcpChannel(
 																	new Socket(nextNodeToTry.getIPAddress(), nextNodeToTry.getTCPPort())),
 																hmacUtils); 

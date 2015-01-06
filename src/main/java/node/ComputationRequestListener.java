@@ -16,7 +16,7 @@ import util.HMACUtils;
 import util.TerminableThread;
 import channels.Channel;
 import channels.ChannelSet;
-import channels.HMACChannel;
+import channels.ComputeHMACChannel;
 import channels.TcpChannel;
 
 /**
@@ -65,7 +65,7 @@ public class ComputationRequestListener extends TerminableThread {
 		if (serverSocket != null) {
 			try {
 				while (true) {
-					Channel nextRequest = new HMACChannel(new TcpChannel(serverSocket.accept()), hmacUtils);
+					Channel nextRequest = new ComputeHMACChannel(new TcpChannel(serverSocket.accept()), hmacUtils);
 					openChannels.add(nextRequest);
 					threadPool.execute(new SingleComputationHandler(nextRequest, config, node));
 					openChannels.cleanUp(); // Make a semi-regular clean up
