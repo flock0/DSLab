@@ -17,8 +17,8 @@ public class HMACUtils {
 		hMac.init(Keys.readSecretKey(new File(secretKeyPath)));
 	}
 	
-	public byte[] create(String message) {
-		return hMac.doFinal(message.getBytes());
+	public byte[] createHMAC(String plainText) {
+		return hMac.doFinal(plainText.getBytes());
 	}
 	
 	public static boolean areEqual(byte[] received_hMac, byte[] calculated_hMac) {
