@@ -254,6 +254,9 @@ public class SingleClientHandler implements Runnable {
 								case DivisionByZero:
 									deductCredits(totalOperatorCount - remainingOperationsCount + 1);
 									return "Error: division by 0";
+								case Tampered:
+									System.out.println("A node identified a tampered message.");
+									return "A node identified a tampered message. No credits have been deducted for the computation.";
 								case OperatorNotSupported:
 									break; // Just skip this node for now and try another one
 								default:

@@ -65,7 +65,7 @@ public class SingleComputationHandler implements Runnable {
 		} catch (TamperedException e) {
 			Result res = new TamperedResult(e.getClearText().substring("!compute ".length()));
 			channel.sendResult(res);
-			System.out.println(e.getMessage());
+			System.out.println(e.getMessage() + ": " + e.getClearText());
 		} catch (IOException e) {
 			System.out.println("Error on getting request: " + e.getMessage());
 		} finally {
