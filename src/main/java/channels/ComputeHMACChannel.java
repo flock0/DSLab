@@ -43,12 +43,12 @@ public class ComputeHMACChannel extends ChannelDecorator {
 			byte[] calculatedHmac = hmacUtils.createHMAC(clearText);
 
 			if(!HMACUtils.areEqual(receivedHmac, calculatedHmac))
-				throw new TamperedException("HMAC does not match. The message received has been tampered!", clearText);
+				throw new TamperedException("HMAC does not match. The message received has been tampered", clearText);
 
 			return clearText;
 
 		} catch (Base64DecodingException e) {
-			throw new TamperedException("HMAC does not match. The message received has been tampered!", clearText);
+			throw new IOException("Couldn't decode Base64 message.", e);
 		}
 	}
 
