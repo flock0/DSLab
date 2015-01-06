@@ -25,9 +25,6 @@ public class ComputationResult extends Result {
 		case OK:
 			builder.append(number);
 			break;
-		case Tampered:
-			builder.append("Message has been tampered with");
-			break;
 		case DivisionByZero:
 			builder.append("Error: division by 0");
 			break;
