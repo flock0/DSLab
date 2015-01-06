@@ -32,12 +32,13 @@ public class ComputeHMACChannel extends ChannelDecorator {
 
 		String readLine = underlying.readStringLine();
 		String[] splitReadLine = readLine.split("\\s");
+
+		if(splitReadLine.length < 2 || !splitReadLine[1].equals("!compute")) return readLine; // Behave like the underlying
+
+		String hmacBase64 = splitReadLine[0];
+		String clearText = readLine.substring(hmacBase64.length() + 1);
+		
 		try {
-			if(splitReadLine.length < 2 || !splitReadLine[1].equals("!compute")) return readLine; // Behave like the underlying
-
-			String hmacBase64 = splitReadLine[0];
-			String clearText = readLine.substring(hmacBase64.length() + 1);
-
 			byte[] receivedHmac = Base64.decode(hmacBase64);
 			byte[] calculatedHmac = hmacUtils.createHMAC(clearText);
 
@@ -47,7 +48,7 @@ public class ComputeHMACChannel extends ChannelDecorator {
 			return clearText;
 
 		} catch (Base64DecodingException e) {
-			throw new IOException("Couldn't recognize HMAC!", e);
+			throw new TamperedException("HMAC does not match. The message received has been tampered!", clearText);
 		}
 	}
 
