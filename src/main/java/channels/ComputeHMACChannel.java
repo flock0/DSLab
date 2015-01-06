@@ -2,8 +2,7 @@ package channels;
 
 import java.io.IOException;
 
-import com.sun.org.apache.xml.internal.security.exceptions.Base64DecodingException;
-import com.sun.org.apache.xml.internal.security.utils.Base64;
+import org.bouncycastle.util.encoders.Base64;
 
 import computation.ResultStatus;
 import util.HMACUtils;
@@ -38,19 +37,14 @@ public class ComputeHMACChannel extends ChannelDecorator {
 
 		String hmacBase64 = splitReadLine[0];
 		String clearText = readLine.substring(hmacBase64.length() + 1);
-		
-		try {
-			byte[] receivedHmac = Base64.decode(hmacBase64);
-			byte[] calculatedHmac = hmacUtils.createHMAC(clearText);
+	
+		byte[] receivedHmac = Base64.decode(hmacBase64);
+		byte[] calculatedHmac = hmacUtils.createHMAC(clearText);
 
-			if(!HMACUtils.areEqual(receivedHmac, calculatedHmac))
-				throw new TamperedException("HMAC does not match. The message received has been tampered.", clearText);
+		if(!HMACUtils.areEqual(receivedHmac, calculatedHmac))
+			throw new TamperedException("HMAC does not match. The message received has been tampered.", clearText);
 
-			return clearText;
-
-		} catch (Base64DecodingException e) {
-			throw new IOException("Couldn't decode Base64 message.", e);
-		}
+		return clearText;
 	}
 
 	@Override
@@ -64,7 +58,7 @@ public class ComputeHMACChannel extends ChannelDecorator {
 		String[] splitOut = out.split("\\s");
 		if(out.startsWith("!compute") || out.startsWith("!tampered") || canParseStatusEnum(splitOut[splitOut.length - 1])) {
 			byte[] hmac = hmacUtils.createHMAC(out);
-			String hmacBase64 = Base64.encode(hmac);
+			String hmacBase64 = new String(Base64.encode(hmac));
 			message = String.format("%s %s", hmacBase64, out);
 		}
 

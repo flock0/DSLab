@@ -2,8 +2,6 @@ package util;
 
 import java.io.IOException;
 
-import com.sun.org.apache.xml.internal.security.exceptions.Base64DecodingException;
-
 /**
  * Signals that the message integrity algorithm has detected an attempt to tamper with the message
  */
