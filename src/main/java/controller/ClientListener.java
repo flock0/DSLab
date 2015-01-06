@@ -1,9 +1,12 @@
 package controller;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.SocketException;
 import java.util.HashMap;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -12,6 +15,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import util.Config;
+import util.HMACUtils;
 import util.TerminableThread;
 import channels.Channel;
 import channels.ChannelSet;
@@ -31,6 +35,7 @@ public class ClientListener extends TerminableThread {
 	private PrivateKey controllerPrivateKey = null;
 	private ChannelSet openChannels; // Keeps track of all open channels for clients or nodes. Used for shutdown 
 	private HashMap<Character, Long> statistic;
+	private HMACUtils hmacUtils;
 
 	public ClientListener(ConcurrentHashMap<String, User> users, ConcurrentHashMap<Character, ConcurrentSkipListSet<Node>> activeNodes, PrivateKey controllerPrivateKey, Config config, HashMap<Character, Long> statistic) throws IOException {
 		this.users = users;
@@ -39,9 +44,20 @@ public class ClientListener extends TerminableThread {
 		this.controllerPrivateKey = controllerPrivateKey;
 		this.statistic = statistic;
 		
-		openServerSocket();
-		createThreadPool();
-		openChannels = new ChannelSet();
+		try {
+			initializeHMAC();
+			openServerSocket();
+			createThreadPool();
+			openChannels = new ChannelSet();
+		} catch(Exception e) {
+			throw new IOException("Couldn't setup client listener", e);
+		}
+	}
+
+	private void initializeHMAC() throws InvalidKeyException, NoSuchAlgorithmException, IOException {
+		String keyPath = System.getProperty("user.dir") + File.separator 
+				+ config.getString("hmac.key").replace("/", File.separator);
+		hmacUtils = new HMACUtils(keyPath);
 	}
 
 	private void openServerSocket() throws IOException {
@@ -59,7 +75,7 @@ public class ClientListener extends TerminableThread {
 				while (true) {
 					Channel nextRequest = new TcpChannel(serverSocket.accept());
 					openChannels.add(nextRequest);
-					threadPool.execute(new SingleClientHandler(nextRequest, activeNodes, users, controllerPrivateKey, openChannels, config, statistic));					
+					threadPool.execute(new SingleClientHandler(nextRequest, activeNodes, users, controllerPrivateKey, openChannels, config, hmacUtils, statistic));					
 					openChannels.cleanUp(); // Make a semi-regular clean up
 				}
 			} catch (SocketException e) {

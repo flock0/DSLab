@@ -13,11 +13,13 @@ import java.util.concurrent.ConcurrentSkipListSet;
 
 import util.Config;
 import util.FixedParameters;
+import util.HMACUtils;
 import util.SecureChannelSetup;
 import channels.Channel;
 import channels.ChannelSet;
 import channels.ClientCommunicator;
 import channels.ComputationCommunicator;
+import channels.HMACChannel;
 import channels.TcpChannel;
 import computation.ComputationResult;
 import computation.NodeRequest;
@@ -37,12 +39,13 @@ public class SingleClientHandler implements Runnable {
 	private ChannelSet openChannels;
 	private HashMap<Character, Long> statistic;
 	private PrivateKey controllerPrivateKey;
+	private HMACUtils hmacUtils;
 
 	public SingleClientHandler(
 			Channel channel,
 			ConcurrentHashMap<Character, ConcurrentSkipListSet<Node>> activeNodes,
 			ConcurrentHashMap<String, User> users, PrivateKey controllerPrivateKey, ChannelSet openChannels, Config config,
-			HashMap<Character, Long> statistic) {
+			HMACUtils hmacUtils, HashMap<Character, Long> statistic) {
 		this.config = config;
 		this.activeNodes = activeNodes;
 		this.users = users;
@@ -50,6 +53,7 @@ public class SingleClientHandler implements Runnable {
 		this.openChannels = openChannels;
 		this.underlyingChannel = channel;
 		this.statistic = statistic;
+		this.hmacUtils = hmacUtils;
 		
 		try {
 			authenticateClient();
@@ -224,8 +228,10 @@ public class SingleClientHandler implements Runnable {
 					if(nextNodeToTry.isOnline()) {
 						currentComputationCommunicator = null;
 						try {
-							Channel channelForCommunicator = new TcpChannel(
-									new Socket(nextNodeToTry.getIPAddress(), nextNodeToTry.getTCPPort())); 
+							Channel channelForCommunicator = new HMACChannel(
+																new TcpChannel(
+																	new Socket(nextNodeToTry.getIPAddress(), nextNodeToTry.getTCPPort())),
+																hmacUtils); 
 							openChannels.add(channelForCommunicator);
 							currentComputationCommunicator = new ComputationCommunicator(channelForCommunicator);
 							

@@ -37,10 +37,10 @@ public class ComputationRequestListener extends TerminableThread {
 		this.config = config;
 		this.node = node;
 		try {
-		initializeHMAC();
-		openServerSocket();
-		createThreadPool();
-		openChannels = new ChannelSet();
+			initializeHMAC();
+			openServerSocket();
+			createThreadPool();
+			openChannels = new ChannelSet();
 		} catch(Exception e) {
 			throw new IOException("Couldn't setup request listener", e);
 		}
