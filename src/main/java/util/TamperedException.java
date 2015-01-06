@@ -11,6 +11,10 @@ public class TamperedException extends IOException {
 
 	private String clearText;
 	
+	public String getClearText() {
+		return clearText;
+	}
+
 	public TamperedException(String message) {
 		super(message);
 	}

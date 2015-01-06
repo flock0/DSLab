@@ -1,11 +1,11 @@
 package computation;
 
-public class TemperedResult extends Result {
+public class TamperedResult extends Result {
 
 	private String originalTerm;
 	
-	public TemperedResult(ResultStatus status, String originalTerm) {
-		super(status);
+	public TamperedResult(String originalTerm) {
+		super(ResultStatus.Tampered);
 		this.originalTerm = originalTerm;
 	}
 	

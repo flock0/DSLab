@@ -1,17 +1,22 @@
 package node;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.SocketException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import util.Config;
 import util.FixedParameters;
+import util.HMACUtils;
 import util.TerminableThread;
 import channels.Channel;
 import channels.ChannelSet;
+import channels.HMACChannel;
 import channels.TcpChannel;
 
 /**
@@ -26,13 +31,25 @@ public class ComputationRequestListener extends TerminableThread {
 	private ExecutorService threadPool;
 	private ChannelSet openChannels;
 	private Node node;
+	private HMACUtils hmacUtils;
 
 	public ComputationRequestListener(Config config, Node node) throws IOException {
 		this.config = config;
 		this.node = node;
+		try {
+		initializeHMAC();
 		openServerSocket();
 		createThreadPool();
 		openChannels = new ChannelSet();
+		} catch(Exception e) {
+			throw new IOException("Couldn't setup request listener", e);
+		}
+	}
+
+	private void initializeHMAC() throws InvalidKeyException, NoSuchAlgorithmException, IOException {
+		String keyPath = System.getProperty("user.dir") + File.separator 
+				+ config.getString("hmac.key").replace("/", File.separator);
+		hmacUtils = new HMACUtils(keyPath);
 	}
 
 	private void openServerSocket() throws IOException {
@@ -48,7 +65,7 @@ public class ComputationRequestListener extends TerminableThread {
 		if (serverSocket != null) {
 			try {
 				while (true) {
-					Channel nextRequest = new TcpChannel(serverSocket.accept());
+					Channel nextRequest = new HMACChannel(new TcpChannel(serverSocket.accept()), hmacUtils);
 					openChannels.add(nextRequest);
 					threadPool.execute(new SingleComputationHandler(nextRequest, config, node));
 					openChannels.cleanUp(); // Make a semi-regular clean up

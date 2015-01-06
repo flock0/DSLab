@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import util.Config;
 import util.NodeLogger;
+import util.TamperedException;
 import channels.Channel;
 import channels.ComputationCommunicator;
 import computation.CommitRequest;
@@ -18,6 +19,7 @@ import computation.Result;
 import computation.ResultStatus;
 import computation.ShareRequest;
 import computation.ShareResult;
+import computation.TamperedResult;
 
 public class SingleComputationHandler implements Runnable {
 
@@ -60,6 +62,10 @@ public class SingleComputationHandler implements Runnable {
 			}
 			channel.sendResult(result);
 			
+		} catch (TamperedException e) {
+			Result res = new TamperedResult(e.getClearText().substring("!compute ".length()));
+			channel.sendResult(res);
+			System.out.println(e.getMessage());
 		} catch (IOException e) {
 			System.out.println("Error on getting request: " + e.getMessage());
 		} finally {
