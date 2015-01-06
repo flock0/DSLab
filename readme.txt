@@ -39,3 +39,7 @@ Ein paar Worte zu den wichtigsten Komponenten:
  - Message Integrity:
   - Wenn eine Nachricht waehrend des Nachrichtentransfers zwischen Cloud Controller und Node veraendert wurde, werden dem Benutzer
     gar keine credits abgezogen, auch wenn zuvor schon Teilberechnungen erfolgreich durchgefuehrt wurden.
+	
+-RMI:  
+  - Der subscribe Befehl wurde so implementiert, dass nur nicht negative Werte für credit akzeptiert werden.
+  - Der getLogs-Befehl verwendet den ObjectOutputStream bzw. ObjectInputStream zum serialisieren der DTOs. Die serialisierten DTOs werden in BASE64 übertragen, um Kompatibilität mit dem TCP Client aus Lab 1 zu gewährleisten, der nur mit Strings umgehen kann. 
