@@ -10,7 +10,7 @@ public class TamperedResult extends Result {
 	}
 	@Override
 	public String toString() {
-		return "!tempered " + originalTerm;
+		return "!tampered " + originalTerm;
 	}
 
 	public static Result fromString(String in) {

@@ -5,6 +5,7 @@ import java.io.IOException;
 import com.sun.org.apache.xml.internal.security.exceptions.Base64DecodingException;
 import com.sun.org.apache.xml.internal.security.utils.Base64;
 
+import computation.ResultStatus;
 import util.HMACUtils;
 import util.TamperedException;
 
@@ -14,7 +15,7 @@ import util.TamperedException;
  * This means, that the second parameter of it (when split at the whitespaces) is '!compute'
  * 
  * When sending messages, the HMAC will only be prepended, when the cleartext message
- * starts with '!compute'
+ * starts with '!compute' or '!tempered'
  * 
  * On any other messages, the channel behave completely like the underlying channel.
  */
@@ -32,8 +33,8 @@ public class ComputeHMACChannel extends ChannelDecorator {
 
 		String readLine = underlying.readStringLine();
 		String[] splitReadLine = readLine.split("\\s");
-
-		if(splitReadLine.length < 2 || !splitReadLine[1].equals("!compute")) return readLine; // Behave like the underlying
+		
+		if(splitReadLine.length < 2 || !(splitReadLine[1].equals("!compute") || splitReadLine[1].equals("!tampered") || canParseStatusEnum(splitReadLine[splitReadLine.length - 1]))) return readLine; // Behave like the underlying
 
 		String hmacBase64 = splitReadLine[0];
 		String clearText = readLine.substring(hmacBase64.length() + 1);
@@ -43,7 +44,7 @@ public class ComputeHMACChannel extends ChannelDecorator {
 			byte[] calculatedHmac = hmacUtils.createHMAC(clearText);
 
 			if(!HMACUtils.areEqual(receivedHmac, calculatedHmac))
-				throw new TamperedException("HMAC does not match. The message received has been tampered", clearText);
+				throw new TamperedException("HMAC does not match. The message received has been tampered.", clearText);
 
 			return clearText;
 
@@ -60,7 +61,8 @@ public class ComputeHMACChannel extends ChannelDecorator {
 	@Override
 	public void println(String out) {
 		String message = out;
-		if(out.startsWith("!compute")) {
+		String[] splitOut = out.split("\\s");
+		if(out.startsWith("!compute") || out.startsWith("!tampered") || canParseStatusEnum(splitOut[splitOut.length - 1])) {
 			byte[] hmac = hmacUtils.createHMAC(out);
 			String hmacBase64 = Base64.encode(hmac);
 			message = String.format("%s %s", hmacBase64, out);
@@ -72,6 +74,15 @@ public class ComputeHMACChannel extends ChannelDecorator {
 	@Override
 	public void println(byte[] out) {
 		throw new UnsupportedOperationException("Sending raw bytes is not possible with the HMACChannel.");
+	}
+
+	private boolean canParseStatusEnum(String enumText) {
+		try {
+			ResultStatus.valueOf(enumText);
+			return true;
+		} catch (IllegalArgumentException e) {
+			return false;
+		}
 	}
 
 }
