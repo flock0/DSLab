@@ -46,8 +46,8 @@ public class ComputationResult extends Result {
 			return new ComputationResult(ResultStatus.OperatorNotSupported, 0);
 		
 		String[] split = in.split("\\s");
-		ResultStatus status = ResultStatus.valueOf(split[0]);
-		int number = Integer.parseInt(split[1]);
+		ResultStatus status = ResultStatus.valueOf(split[1]);
+		int number = Integer.parseInt(split[0]);
 		
 		return new ComputationResult(status, number);
 	}	
