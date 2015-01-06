@@ -1,3 +1,7 @@
+Florian Chlan, 1226204
+Alexander Gre�ler, 1225159
+Wen Chao Chen, 1129468
+
 Ein paar Worte zu den wichtigsten Komponenten:
 
 -  Node:
@@ -27,7 +31,8 @@ Ein paar Worte zu den wichtigsten Komponenten:
   - Nodes und Cloud Controller koennen offline sein, heruntergefahren werden oder abstuerzen. In diesem Fall wartet ein Node, 
     welcher der Cloud beitreten moechte, jeweils 10 Sek. (Cloud Controller) bzw. 5 Sek. (Node) lang auf eine Antwort. Falls 
     innerhalb der Wartezeit keine Antwort zurueck kommt, gilt der Versuch, der Cloud beizutreten als fehlgeschlagen. Nach 3 
-    Versuchen wird eine Fehlermeldung ausgegeben und die Node heruntergefahren.
+    Versuchen wird eine Fehlermeldung ausgegeben und die Node heruntergefahren, um dem Starvation-Problem entgegenzuwirken.
+  - Automatisches Testen ist dadurch schwierig, da Nodes bis zu 1 Minute brauchen, um der Cloud beizutreten.
   - Resourcen werden nur aktualisiert, wenn ein neuer Node der Cloud betritt. Werden Nodes heruntergefahren oder stuerzen
     sie ab, werden die Resourcen nicht automatisch aktualisiert. Dadurch entstehen zwar ungenutzte Ressourcen, jedoch muss
     der Cloud Controller sich nicht um Faelle wie verzoegerte Alive-Messages kuemmern, sich alle Ressourcenwerte der Nodes
@@ -41,5 +46,5 @@ Ein paar Worte zu den wichtigsten Komponenten:
     gar keine credits abgezogen, auch wenn zuvor schon Teilberechnungen erfolgreich durchgefuehrt wurden.
 	
 -RMI:  
-  - Der subscribe Befehl wurde so implementiert, dass nur nicht negative Werte für credit akzeptiert werden.
-  - Der getLogs-Befehl verwendet den ObjectOutputStream bzw. ObjectInputStream zum serialisieren der DTOs. Die serialisierten DTOs werden in BASE64 übertragen, um Kompatibilität mit dem TCP Client aus Lab 1 zu gewährleisten, der nur mit Strings umgehen kann. 
+  - Der subscribe Befehl wurde so implementiert, dass nur nicht negative Werte fuer credit akzeptiert werden.
+  - Der getLogs-Befehl verwendet den ObjectOutputStream bzw. ObjectInputStream zum serialisieren der DTOs. Die serialisierten DTOs werden in BASE64 uebertragen, um Kompatibilitaet mit dem TCP Client aus Lab 1 zu gewaehrleisten, der nur mit Strings umgehen kann. 
