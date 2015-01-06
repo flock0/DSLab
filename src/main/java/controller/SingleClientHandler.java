@@ -15,6 +15,7 @@ import util.Config;
 import util.FixedParameters;
 import util.HMACUtils;
 import util.SecureChannelSetup;
+import util.TamperedException;
 import channels.Channel;
 import channels.ChannelSet;
 import channels.ClientCommunicator;
@@ -24,6 +25,7 @@ import channels.TcpChannel;
 import computation.ComputationResult;
 import computation.NodeRequest;
 import computation.Result;
+import computation.TamperedResult;
 
 public class SingleClientHandler implements Runnable {
 
@@ -279,6 +281,9 @@ public class SingleClientHandler implements Runnable {
 			deductCredits(totalOperatorCount);
 			return String.valueOf(firstOperand);
 
+		} catch (TamperedException e) {
+			System.out.println(e.getMessage());
+			return e.getMessage() + "No credits have been deducted for the computation.";
 		} catch (IOException e) {
 			System.out.println("Error on getting result: " + e.getMessage());
 			if(!sessionIsBeingTerminated)

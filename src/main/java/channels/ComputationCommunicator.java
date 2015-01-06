@@ -2,6 +2,7 @@ package channels;
 
 import java.io.IOException;
 
+import util.TamperedException;
 import computation.CommitRequest;
 import computation.ComputationResult;
 import computation.LogRequest;
@@ -56,7 +57,7 @@ public class ComputationCommunicator{
 		return null;
 	}
 	
-	public Result getResult() throws IOException {
+	public Result getResult() throws TamperedException, IOException {
 		String response = underlying.readStringLine();
 		if(response.startsWith("!logs "))
 			return LogResult.fromString(response);
