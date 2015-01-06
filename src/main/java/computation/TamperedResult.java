@@ -8,9 +8,15 @@ public class TamperedResult extends Result {
 		super(ResultStatus.Tampered);
 		this.originalTerm = originalTerm;
 	}
-	
 	@Override
 	public String toString() {
 		return "!tempered " + originalTerm;
+	}
+
+	public static Result fromString(String in) {
+		if(in == null || !in.startsWith("!tampered"))
+			return new Result(ResultStatus.Error);
+		
+		return new TamperedResult(in.substring("!tampered".length() + 1));
 	}
 }

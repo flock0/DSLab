@@ -11,6 +11,7 @@ import computation.NodeRequest;
 import computation.Request;
 import computation.Result;
 import computation.ShareRequest;
+import computation.TamperedResult;
 
 /**
  * Handles communication between the controller and the node
@@ -61,6 +62,8 @@ public class ComputationCommunicator{
 		String response = underlying.readStringLine();
 		if(response.startsWith("!logs "))
 			return LogResult.fromString(response);
+		else if(response.startsWith("!tampered"))
+			return TamperedResult.fromString(response);
 		else
 			return ComputationResult.fromString(response);
 	}
